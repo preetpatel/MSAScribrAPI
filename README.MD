@@ -1,4 +1,4 @@
-YouTube provides an official API for getting information on a YouTube video. This is known as the `YouTube Data API V3`. Our first goal of the web crawler is to retrieve information from this API and store it in our database.
+YouTube provides an official API for getting information on a YouTube video. This is known as the `YouTube Data API V3`. Our first goal to create a program that retrieves information from this API and store it in our database.
 
 To start using the YouTube API, take a look at this link
 https://developers.google.com/youtube/v3/getting-started
