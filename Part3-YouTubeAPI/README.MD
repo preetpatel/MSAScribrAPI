@@ -31,10 +31,10 @@ namespace ScribrAPI.Helper
     public class YouTubeHelper
     {
         public static void Main(string[] args){
-            getVideoInfo("BZbChKzedEk");
+            GetVideoInfo("BZbChKzedEk");
         }
 
-        public static void getVideoInfo(String videoId)
+        public static void GetVideoInfo(String videoId)
         {
 
         }
@@ -54,9 +54,9 @@ public static void Main1(string[] args)
 
 Install `Newtonsoft.Json` from NuGet manager, we will be using this to deal with the content that eh YouTube API returns.
 
-**The purpose of `getVideoInfo()` is to return a Video object that the API can use to create an entry in the database.**
+**The purpose of `GetVideoInfo()` is to return a Video object that the API can use to create an entry in the database.**
 
-We will first fetch the JSON into our application. Add the following code in the `getVideoInfo()`
+We will first fetch the JSON into our application. Add the following code in the `GetVideoInfo()`
 
 ```C#
 String APIKey = "YOURAPIKEY";
@@ -95,12 +95,12 @@ video.ThumbnailUrl = thumbnailURL;
 return video;
 ```
 
-Note that this method returns a video object, so we need to change the method signature to tell the compiler that we are returning an video object. Change `public static void getVideoInfo(String videoId)` to `public static Video getVideoInfo(String videoId)`
+Note that this method returns a video object, so we need to change the method signature to tell the compiler that we are returning an video object. Change `public static void GetVideoInfo(String videoId)` to `public static Video GetVideoInfo(String videoId)`
 
 Now that the method is done, we can test this by calling this method in `Main()`
 ```C#
 public static void Main(String[] args) {
-    getVideoInfo("BZbChKzedEk");
+    GetVideoInfo("BZbChKzedEk");
 }
 ```
 
@@ -133,12 +133,12 @@ String URL = data["url"];
 
 These two lines above tells the program to extract the value from the "url" key in the json request body.
 
-Now that we have the URL, we can finally call the `getVideoInfo(String videoId)` in `YouTubeHelper`. Wait... Can we? Note our plan is to pass the entire YouTube url in the request body, but, `getVideoInfo()` only deals with videoId, not the entire Video link.
+Now that we have the URL, we can finally call the `GetVideoInfo(String videoId)` in `YouTubeHelper`. Wait... Can we? Note our plan is to pass the entire YouTube url in the request body, but, `GetVideoInfo()` only deals with videoId, not the entire Video link.
 
 We will need to create another method in the helper class to extract video id from the video link.
 
 ```C#
-static String getVideoIdFromURL(String videoURL) {
+static String GetVideoIdFromURLURLURLURLURLURLURLURLURL(String videoURL) {
     // Extract the string after the = sign
     // e.g. https://www.youtube.com/watch?v=ehvz3iN8pp4 becomes ehvz3iN8pp4 
     int indexOfFirstId = videoURL.IndexOf("=") + 1;
@@ -155,8 +155,8 @@ public async Task<ActionResult<Video>> PostVideo([FromBody]dynamic data)
 {
     // Constructing the video object from our helper function
     String videoURL = data["url"];
-    String videoId = YouTubeHelper.getVideoIdFromURL(videoURL);
-    Video video = YouTubeHelper.getVideoInfo(videoId);
+    String videoId = YouTubeHelper.GetVideoIdFromURLURLURLURLURLURLURLURL(videoURL);
+    Video video = YouTubeHelper.GetVideoInfo(videoId);
 
     // Add this video object to the database
     _context.Video.Add(video);

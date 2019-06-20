@@ -8,15 +8,15 @@ namespace ScribrAPI.Helper
 {
     class YouTubeHelper
     {
-        public static String getVideoIdFromURL(String videoURL) {
-            // Extract the string after the = sign
+        public static String GetVideoIdFromURL(String videoURL) {
+            // Extract the string after the '=' sign
             // e.g. https://www.youtube.com/watch?v=ehvz3iN8pp4 becomes ehvz3iN8pp4 
             int indexOfFirstId = videoURL.IndexOf("=") + 1;
             String videoId = videoURL.Substring(indexOfFirstId);
             return videoId;
         }
 
-        public static Video getVideoInfo(String videoId)
+        public static Video GetVideoInfo(String videoId)
         {
             String APIKey = "AIzaSyBR8fLO7PlD_nttYr7P70c3gMSLyQuGHxg";
             String YouTubeAPIURL = "https://www.googleapis.com/youtube/v3/videos?id=" + videoId + "&key=" + APIKey + "&part=snippet,contentDetails";
@@ -38,12 +38,14 @@ namespace ScribrAPI.Helper
             int duration = (int)videoDuration.TotalSeconds;
 
             // Create a new Video Object from the model defined in the API.
-            Video video = new Video();
-            video.VideoTitle = title;
-            video.WebUrl = videoUrl;
-            video.VideoLength = (int)videoDuration.TotalSeconds;
-            video.IsFavourite = false;
-            video.ThumbnailUrl = thumbnailURL;
+            Video video = new Video
+            {
+                VideoTitle = title,
+                WebUrl = videoUrl,
+                VideoLength = (int)videoDuration.TotalSeconds,
+                IsFavourite = false,
+                ThumbnailUrl = thumbnailURL
+            };
 
             return video;
         }

@@ -78,8 +78,8 @@ namespace ScribrAPI.Controllers
         {
             // Constructing the video object from our helper function
             String videoURL = data["url"];
-            String videoId = YouTubeHelper.getVideoIdFromURL(videoURL);
-            Video video = YouTubeHelper.getVideoInfo(videoId);
+            String videoId = YouTubeHelper.GetVideoIdFromURL(videoURL);
+            Video video = YouTubeHelper.GetVideoInfo(videoId);
 
             // Add this video object to the database
             _context.Video.Add(video);
