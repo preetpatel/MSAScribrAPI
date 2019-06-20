@@ -104,10 +104,10 @@ static void Main(String[] args) {
 }
 
 Set a breakpoint in the last line of the method so we can take a look at the video object we've constructed, we can do this by clicking on the empty space on the left until the red dot shown below appears.
-![alt text](images/setBreakpoint.PNG "setBreakpoint")
+![alt text](Images/setBreakpoint.PNG "setBreakpoint")
 
 If we run the program now, we can see that the video object contains the information we need.
-![alt text](images/videoObject.PNG "videoObject")
+![alt text](Images/videoObject.PNG "videoObject")
 
 We are done with constructing the Video info! We are now ready to incorporate this little helper function into our API.
 
@@ -173,4 +173,4 @@ If we launch the application now and pass the following JSON in the request body
 ```
 
 We would receive a response with the video info.
-![alt text](images/PostVideoJson.PNG "setBreakpoint")
+![alt text](Images/PostVideoJson.PNG "PostVideo JSON response")
