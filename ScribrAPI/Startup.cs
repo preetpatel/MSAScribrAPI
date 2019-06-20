@@ -11,7 +11,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using ScribrAPI.Model;
-using ScribrAPI.Model;
 using Swashbuckle.AspNetCore.Swagger;
 
 namespace ScribrAPI
