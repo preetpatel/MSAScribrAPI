@@ -17,43 +17,45 @@ https://www.googleapis.com/youtube/v3/videos?id=`VIDEOIDHERE`&key=`APIKEYHERE`&p
 
 What the API returns in a JSON formatted string which we can manipulate easily in ASP.NET.
 
-In order to use this API in ASP.NET, we need to create a new console app. Right click on the API Solution in Visual Studio and add a new project. Choose `Console App (.NET Core)` and name it YouTubeHelper. Rename the newly generated Program.cs under YouTubeHelper namespace to YouTubeHelper and paste in the following start code:
+***CREATES CIRCULAR DEPENDENCIES DO NOT CREATE NEW PROJECT***
+
+In order to use this API in ASP.NET, we need to create a little helper class, the purpose of this helper class is to deal with all YouTube API retrieving/crawling. Create a new folder in the project called Helper and add a new class under that folder, we will call it `YouTubeHelper`, paste in the following code
 
 ```C#
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using ScribrAPI.Model;
 
-namespace YouTubeHelper
+namespace ScribrAPI.Helper
 {
-    class YouTubeHelper
+    public class YouTubeHelper
     {
-        static void Main(String[] args) {
-            getVideoInfo("videoId");
-            Console.ReadLine();
+        public static void Main(string[] args){
+            getVideoInfo("BZbChKzedEk");
         }
 
-        static void getVideoInfo(String videoId)
+        public static void getVideoInfo(String videoId)
         {
-            Console.WriteLine(videoId);
+
         }
     }
 }
 ```
 
-The `getVideoInfo()` will be called from our API and the `Main()` is for us to test the code.
-
-Right click on YouTubeHelper project and select set as start project.
-
-Right click on YouTubeHelper project again and go to build dependencies - Project dependencies and tick ScribrAPI as we will need to use the Video Model later.
-
-Start the application and you should be able to see the string videoId shown in the app.
-
-We are now ready to make the API call.
-
-Install `Newtonsoft.Json` from NuGet manager.
+There are now two entry points in the program, we need to disable the entry point into the API. Navigate to `Program.cs` as change the method `Main()` to `Main1()` as shown below. We will change this back later.
+```C#
+public static void Main1(string[] args)
+{
+    CreateWebHostBuilder(args).Build().Run();
+}
+``` 
 
 
-**The purpose of this method is to return a Video object so that the API can use it to create an entry in the database.**
+Install `Newtonsoft.Json` from NuGet manager, we will be using this to deal with the content that eh YouTube API returns.
+
+**The purpose of `getVideoInfo()` is to return a Video object that the API can use to create an entry in the database.**
 
 We will first fetch the JSON into our application. Add the following code in the `getVideoInfo()`
 
@@ -99,7 +101,6 @@ Note that this method returns a video object, so we need to change the method si
 Now that the method is done, we can test this by calling this method in `Main()`
 static void Main(String[] args) {
     getVideoInfo("BZbChKzedEk");
-    Console.ReadLine();
 }
 
 Set a breakpoint in the last line of the method so we can take a look at the video object we've constructed, we can do this by clicking on the empty space on the left until the red dot shown below appears.
@@ -109,3 +110,60 @@ If we run the program now, we can see that the video object contains the informa
 ![alt text](images/videoObject.PNG "videoObject")
 
 We are done with constructing the Video info! We are now ready to incorporate this little helper function into our API.
+
+We want to use the `YouTubeHelper` whenever we receive a POST request in the `/Video` endpoint.
+
+To do this, we need to go back to the API project.
+Delete the `Main()` in YouTubeHelper and change `Main1()` back to `Main()` in `Program.cs` 
+
+
+We now need to modify the VideoController
+
+Navigate to the method that handles POST request in VideoController. Instead of receiving a whole video object from the request body, we will edit this method so that it takes an YouTube URL.
+
+In order to process a POST request, we first need to obtain the request body so we know what information to process. Modify the signature of the `PostVideo()` to the following
+```c#
+public async Task<ActionResult<Video>> PostVideo([FromBody]dynamic data)
+```
+Again, this is similar to what we did before, we are converting a String of text to a dynamic object so that it gets resolved at runtime.
+We'll extract the URL from the dynamic object
+
+```C#
+String URL = data["url"];
+```
+
+These two lines above tells the program to extract the value from the "url" key in the json request body.
+
+Now that we have the URL, we can finally call the `getVideoInfo(String videoId)` in `YouTubeHelper`. Wait.. Can we? Note we are parsing in the entire YouTube url in the request body but getVideoInfo only deals with videoId, not the entire Video link.
+
+We will need to create another method in the helper class to extract video id from the video link.
+
+```C#
+static String getVideoIdFromURL(String videoURL) {
+    int indexOfFirstId = videoURL.IndexOf("=") + 1;
+    String videoId = videoURL.Substring(indexOfFirstId);
+    return videoId;
+}
+```
+
+We will now call this method in our `PostVideo()` in `VideoController.cs`
+```C#
+// POST: api/Videos
+[HttpPost]
+public async Task<ActionResult<Video>> PostVideo([FromBody]dynamic data)
+{
+    String videoURL = data["url"];
+    String videoId = YouTubeHelper.getVideoIdFromURL(videoURL);
+    Video video = YouTubeHelper.getVideoInfo(videoId);
+    return (Ok(video));
+}
+```
+If we launch the application now and pass the following code in the request body
+```JSON
+{
+    "url" : "https://www.youtube.com/watch?v=-Cu3wW8rNAs"
+}
+```
+
+We would receive a response with the video info.
+![alt text](images/PostVideoJson.PNG "setBreakpoint")

@@ -4,22 +4,17 @@ using System;
 using System.Net;
 using System.Xml;
 
-namespace YouTubeHelper
+namespace ScribrAPI.Helper
 {
     class YouTubeHelper
     {
-        static void Main(String[] args) {
-            getVideoIdFromURL("https://www.youtube.com/watch?v=jKv_N0IDS2A");
-            Console.ReadLine();
-        }
-
-        static String getVideoIdFromURL(String videoURL) {
+        public static String getVideoIdFromURL(String videoURL) {
             int indexOfFirstId = videoURL.IndexOf("=") + 1;
             String videoId = videoURL.Substring(indexOfFirstId);
             return videoId;
         }
 
-        static Video getVideoInfo(String videoId)
+        public static Video getVideoInfo(String videoId)
         {
             String APIKey = "AIzaSyBR8fLO7PlD_nttYr7P70c3gMSLyQuGHxg";
             String YouTubeAPIURL = "https://www.googleapis.com/youtube/v3/videos?id=" + videoId + "&key=" + APIKey + "&part=snippet,contentDetails";
