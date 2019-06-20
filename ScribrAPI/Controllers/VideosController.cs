@@ -76,14 +76,17 @@ namespace ScribrAPI.Controllers
         [HttpPost]
         public async Task<ActionResult<Video>> PostVideo([FromBody]dynamic data)
         {
+            // Constructing the video object from our helper function
             String videoURL = data["url"];
             String videoId = YouTubeHelper.getVideoIdFromURL(videoURL);
             Video video = YouTubeHelper.getVideoInfo(videoId);
-            //_context.Video.Add(video);
-            //await _context.SaveChangesAsync();
 
-            //return CreatedAtAction("GetVideo", new { id = video.VideoId }, video);
-            return (Ok(video));
+            // Add this video object to the database
+            _context.Video.Add(video);
+            await _context.SaveChangesAsync();
+
+            // Return success code and the info on the video object
+            return CreatedAtAction("GetVideo", new { id = video.VideoId }, video);
         }
 
         // DELETE: api/Videos/5

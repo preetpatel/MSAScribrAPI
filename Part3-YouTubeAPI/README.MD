@@ -146,19 +146,26 @@ static String getVideoIdFromURL(String videoURL) {
 }
 ```
 
-We will now call this method in our `PostVideo()` in `VideoController.cs`
+We will now call the two methods we created in our `PostVideo()` in `VideoController.cs`
 ```C#
 // POST: api/Videos
 [HttpPost]
 public async Task<ActionResult<Video>> PostVideo([FromBody]dynamic data)
 {
+    // Constructing the video object from our helper function
     String videoURL = data["url"];
     String videoId = YouTubeHelper.getVideoIdFromURL(videoURL);
     Video video = YouTubeHelper.getVideoInfo(videoId);
-    return (Ok(video));
+
+    // Add this video object to the database
+    _context.Video.Add(video);
+    await _context.SaveChangesAsync();
+
+    // Return success code and the info on the video object
+    return CreatedAtAction("GetVideo", new { id = video.VideoId }, video);
 }
 ```
-If we launch the application now and pass the following code in the request body
+If we launch the application now and pass the following JSON in the request body
 ```JSON
 {
     "url" : "https://www.youtube.com/watch?v=-Cu3wW8rNAs"
@@ -167,5 +174,3 @@ If we launch the application now and pass the following code in the request body
 
 We would receive a response with the video info.
 ![alt text](images/PostVideoJson.PNG "setBreakpoint")
-
-This is 
