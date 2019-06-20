@@ -9,6 +9,8 @@ namespace ScribrAPI.Helper
     class YouTubeHelper
     {
         public static String getVideoIdFromURL(String videoURL) {
+            // Extract the string after the = sign
+            // e.g. https://www.youtube.com/watch?v=ehvz3iN8pp4 becomes ehvz3iN8pp4 
             int indexOfFirstId = videoURL.IndexOf("=") + 1;
             String videoId = videoURL.Substring(indexOfFirstId);
             return videoId;
