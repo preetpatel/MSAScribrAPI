@@ -4,13 +4,13 @@ using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace ScribrAPI.Model
 {
-    public partial class scriberContext : DbContext
+    public partial class scribrdbContext : DbContext
     {
-        public scriberContext()
+        public scribrdbContext()
         {
         }
 
-        public scriberContext(DbContextOptions<scriberContext> options)
+        public scribrdbContext(DbContextOptions<scribrdbContext> options)
             : base(options)
         {
         }
@@ -23,13 +23,13 @@ namespace ScribrAPI.Model
             if (!optionsBuilder.IsConfigured)
             {
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. See http://go.microsoft.com/fwlink/?LinkId=723263 for guidance on storing connection strings.
-                optionsBuilder.UseSqlServer("Server=tcp:scriber.database.windows.net,1433;Initial Catalog=scriber;Persist Security Info=False;User ID=XLIN928;Password=XIzz4#11cDHr;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;");
+                optionsBuilder.UseSqlServer("Server=tcp:msa2019.database.windows.net,1433;Initial Catalog=scribrdb;Persist Security Info=False;User ID=nguyennguyen;Password=testing123*;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;");
             }
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.HasAnnotation("ProductVersion", "2.2.3-servicing-35854");
+            modelBuilder.HasAnnotation("ProductVersion", "2.2.4-servicing-10062");
 
             modelBuilder.Entity<Transcription>(entity =>
             {

@@ -2,9 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Web.Http.Description;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ScribrAPI.Model;
@@ -13,33 +11,23 @@ namespace ScribrAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class VideosController : ControllerBase
+    public class IsFavouriteController : ControllerBase
     {
-        private readonly Video _video = new Video
-        {
-            VideoId = 10,
-            VideoTitle = "ABC",
-            VideoLength = 100,
-            WebUrl = "abc.com",
-            ThumbnailUrl = "abc.jpg",
-            IsFavourite = true
-        };
         private readonly scribrdbContext _context;
 
-        public VideosController(scribrdbContext context)
+        public IsFavouriteController(scribrdbContext context)
         {
             _context = context;
         }
 
-        // GET: api/Videos
+        // GET: api/IsFavourite
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Video>>> GetVideo()
         {
             return await _context.Video.ToListAsync();
         }
 
-        // GET: api/Videos/5
-        //[ResponseType(typeof(VideoDTO))]
+        // GET: api/IsFavourite/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Video>> GetVideo(int id)
         {
@@ -53,7 +41,7 @@ namespace ScribrAPI.Controllers
             return video;
         }
 
-        // PUT: api/Videos/5
+        // PUT: api/IsFavourite/5
         [HttpPut("{id}")]
         public async Task<IActionResult> PutVideo(int id, Video video)
         {
@@ -83,16 +71,7 @@ namespace ScribrAPI.Controllers
             return NoContent();
         }
 
-        //PUT with PATCH to handle isFavourite
-        [HttpPatch("update")]
-        public Video Patch([FromBody]JsonPatchDocument<Video> videoPatch)
-        {
-            //scribrdbContext scribrdbContext = _context.
-            videoPatch.ApplyTo(_video);
-            return _video;
-        }
-
-        // POST: api/Videos
+        // POST: api/IsFavourite
         [HttpPost]
         public async Task<ActionResult<Video>> PostVideo(Video video)
         {
@@ -102,7 +81,7 @@ namespace ScribrAPI.Controllers
             return CreatedAtAction("GetVideo", new { id = video.VideoId }, video);
         }
 
-        // DELETE: api/Videos/5
+        // DELETE: api/IsFavourite/5
         [HttpDelete("{id}")]
         public async Task<ActionResult<Video>> DeleteVideo(int id)
         {

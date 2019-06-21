@@ -5,6 +5,11 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ScribrAPI.Model
 {
+    public class VideoDTO
+    {
+        public int VideoId { get; set; }
+        public bool IsFavourite { get; set; }
+    }
     public partial class Video
     {
         public Video()
