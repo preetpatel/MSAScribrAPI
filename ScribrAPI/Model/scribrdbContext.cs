@@ -1,4 +1,5 @@
 ﻿using System;
+using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 
@@ -6,6 +7,7 @@ namespace ScribrAPI.Model
 {
     public partial class scribrdbContext : DbContext
     {
+        private readonly IMapper _mapper;
         public scribrdbContext()
         {
         }

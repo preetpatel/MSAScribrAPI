@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Web.Http.Description;
+using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
@@ -15,6 +16,8 @@ namespace ScribrAPI.Controllers
     [ApiController]
     public class VideosController : ControllerBase
     {
+        private readonly IMapper _mapper;
+        private readonly scribrdbContext _scribrdbContext;
         private readonly Video _video = new Video
         {
             VideoId = 10,
@@ -26,9 +29,10 @@ namespace ScribrAPI.Controllers
         };
         private readonly scribrdbContext _context;
 
-        public VideosController(scribrdbContext context)
+        public VideosController(scribrdbContext context, IMapper mapper)
         {
             _context = context;
+            _mapper = mapper;
         }
 
         // GET: api/Videos
@@ -39,7 +43,6 @@ namespace ScribrAPI.Controllers
         }
 
         // GET: api/Videos/5
-        //[ResponseType(typeof(VideoDTO))]
         [HttpGet("{id}")]
         public async Task<ActionResult<Video>> GetVideo(int id)
         {
@@ -84,12 +87,15 @@ namespace ScribrAPI.Controllers
         }
 
         //PUT with PATCH to handle isFavourite
-        [HttpPatch("update")]
-        public Video Patch([FromBody]JsonPatchDocument<Video> videoPatch)
+        [HttpPatch("update/{id}")]
+        public Video Patch(int id, [FromBody]JsonPatchDocument<VideoDTO> videoPatch)
         {
-            //scribrdbContext scribrdbContext = _context.
-            videoPatch.ApplyTo(_video);
-            return _video;
+            Video videoUpdate = _context.Video.Find(id);
+            VideoDTO videoDTOUpdate = _mapper.Map<VideoDTO>(videoUpdate);
+            videoPatch.ApplyTo(videoDTOUpdate);
+            _mapper.Map(videoDTOUpdate, videoUpdate);
+            _context.Update(videoUpdate);
+            return videoUpdate;
         }
 
         // POST: api/Videos
