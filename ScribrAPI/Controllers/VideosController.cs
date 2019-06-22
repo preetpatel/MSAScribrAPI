@@ -132,6 +132,30 @@ namespace ScribrAPI.Controllers
             return video;
         }
 
+        // POST api/Videos/search
+        [HttpPost("searchBySubtitle/")]
+        public async Task<ActionResult<IEnumerable<Transcription>>> Search([FromBody]dynamic data)
+        {
+            String searchString = data["SearchString"];
+
+            // Choose transcriptions that has the phrase 
+            var videos = await _context.Video.Include(video => video.Transcription).Select(video => new Video {
+                VideoId = video.VideoId,
+                VideoTitle = video.VideoTitle,
+                VideoLength = video.VideoLength,
+                WebUrl = video.WebUrl,
+                ThumbnailUrl = video.ThumbnailUrl,
+                IsFavourite = video.IsFavourite,
+                Transcription = video.Transcription.Where(tran => tran.Phrase.Contains(searchString)).ToList()
+            }).ToListAsync();
+
+            // Removes all videos with empty transcription
+            videos.RemoveAll(video => video.Transcription.Count == 0);
+            return Ok(videos);
+
+        }
+
+
         private bool VideoExists(int id)
         {
             return _context.Video.Any(e => e.VideoId == id);

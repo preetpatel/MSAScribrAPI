@@ -52,12 +52,12 @@ namespace ScribrAPI.Helper
             return transcriptions;
         }
 
+        // Removes escape and unicode characters from the link
         private static String CleanLink(String subtitleURL)
         {
             subtitleURL = subtitleURL.Replace("\\\\u0026", "&");
             subtitleURL = subtitleURL.Replace("\\", "");
             return (subtitleURL);
-
         }
 
         public static Video GetVideoInfo(String videoId)
