@@ -138,7 +138,7 @@ namespace ScribrAPI.Controllers
                 return BadRequest("Search string cannot be null or empty.");
             }
             var videoIDs = await _context.Transcription.Where(tran => tran.Phrase.Contains(searchString)).Select(video => video.VideoId).ToListAsync();
-            var videos = _context.Video.Where(video => videoIDs.Contains(video.VideoId)).ToList();
+            var videos = await _context.Video.Where(video => videoIDs.Contains(video.VideoId)).ToListAsync();
             return videos;
         }
 
