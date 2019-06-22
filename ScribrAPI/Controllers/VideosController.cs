@@ -33,6 +33,8 @@ namespace ScribrAPI.Controllers
         public async Task<ActionResult<Video>> GetVideo(int id)
         {
             var video = await _context.Video.FindAsync(id);
+            video.VideoTitle = "test";
+            _context.SaveChanges();
 
             if (video == null)
             {
@@ -84,6 +86,31 @@ namespace ScribrAPI.Controllers
             // Add this video object to the database
             _context.Video.Add(video);
             await _context.SaveChangesAsync();
+
+            // Get the primary key of the newly created video record
+            int id = video.VideoId;
+
+            // This is needed because context are NOT thread safe, therefore we create another context for the following task.
+            // We will be using this to insert transcriptions into the database on a seperate thread
+            // So that it doesn't block the API.
+            scriberContext tempContext = new scriberContext();
+            TranscriptionsController transcriptionsController = new TranscriptionsController(tempContext);
+
+            // This will be executed in the background.
+            Task addCaptions = Task.Run(async () =>
+            {
+                List<Transcription> transcriptions = new List<Transcription>();
+                transcriptions = YouTubeHelper.GetTranscriptions(videoId);
+
+                for (int i = 0; i < transcriptions.Count; i++)
+                {
+                    // Get the transcription objects form transcriptions and assign VideoId to id, the primary key of the newly inserted video
+                    Transcription transcription = transcriptions.ElementAt(i);
+                    transcription.VideoId = id;
+                    // Add this transcription to the database
+                    await transcriptionsController.PostTranscription(transcription);
+                }
+            });
 
             // Return success code and the info on the video object
             return CreatedAtAction("GetVideo", new { id = video.VideoId }, video);

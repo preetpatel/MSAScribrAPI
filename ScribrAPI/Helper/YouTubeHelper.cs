@@ -1,7 +1,9 @@
 ﻿using Newtonsoft.Json;
 using ScribrAPI.Model;
 using System;
+using System.Collections.Generic;
 using System.Net;
+using System.Text.RegularExpressions;
 using System.Xml;
 
 namespace ScribrAPI.Helper
@@ -14,6 +16,48 @@ namespace ScribrAPI.Helper
             int indexOfFirstId = videoURL.IndexOf("=") + 1;
             String videoId = videoURL.Substring(indexOfFirstId);
             return videoId;
+        }
+
+        public static List<Transcription> GetTranscriptions(String videoId)
+        {
+            String YouTubeVideoURL = "https://www.youtube.com/watch?v=" + videoId;
+            String HTMLSource = new WebClient().DownloadString(YouTubeVideoURL);
+
+            // Use regular expression to find the link with the transcription
+            String pattern = "timedtext.+lang=en";
+            Match match = Regex.Match(HTMLSource, pattern);
+            String subtitleLink = "https://www.youtube.com/api/" + match;
+            subtitleLink = CleanLink(subtitleLink);
+
+            // Use XmlDocument to load the subtitle XML.
+            XmlDocument doc = new XmlDocument();
+            doc.Load(subtitleLink);
+            XmlNode root = doc.ChildNodes[1];
+
+            // Go through each tag and look for start time and phrase.
+            List<Transcription> transcriptions = new List<Transcription>();
+            if (root.HasChildNodes)
+            {
+                for (int i = 0; i < root.ChildNodes.Count; i++)
+                {
+                    Transcription transcription = new Transcription
+                    {
+                        StartTime = (int)Convert.ToDouble(root.ChildNodes[i].Attributes["start"].Value),
+                        Phrase = root.ChildNodes[i].InnerText
+                    };
+
+                    transcriptions.Add(transcription);
+                }
+            }
+            return transcriptions;
+        }
+
+        private static String CleanLink(String subtitleURL)
+        {
+            subtitleURL = subtitleURL.Replace("\\\\u0026", "&");
+            subtitleURL = subtitleURL.Replace("\\", "");
+            return (subtitleURL);
+
         }
 
         public static Video GetVideoInfo(String videoId)
