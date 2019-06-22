@@ -25,7 +25,7 @@ namespace ScribrAPI.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Video>>> GetVideo()
         {
-            return await _context.Video.ToListAsync();
+            return await _context.Video.Include(video => video.Transcription).ToListAsync();
         }
 
         // GET: api/Videos/5
@@ -33,9 +33,6 @@ namespace ScribrAPI.Controllers
         public async Task<ActionResult<Video>> GetVideo(int id)
         {
             var video = await _context.Video.FindAsync(id);
-            video.VideoTitle = "test";
-            _context.SaveChanges();
-
             if (video == null)
             {
                 return NotFound();
@@ -130,6 +127,19 @@ namespace ScribrAPI.Controllers
             await _context.SaveChangesAsync();
 
             return video;
+        }
+
+        // GET api/Videos/SearchByTranscriptions/HelloWorld
+        [HttpGet("SearchByTranscriptions/{searchString}")]
+        public async Task<ActionResult<IEnumerable<Video>>> Search(string searchString)
+        {
+            if (String.IsNullOrEmpty(searchString))
+            {
+                return BadRequest("Search string cannot be null or empty.");
+            }
+            var videoIDs = await _context.Transcription.Where(tran => tran.Phrase.Contains(searchString)).Select(video => video.VideoId).ToListAsync();
+            var videos = _context.Video.Where(video => videoIDs.Contains(video.VideoId)).ToList();
+            return videos;
         }
 
         private bool VideoExists(int id)
