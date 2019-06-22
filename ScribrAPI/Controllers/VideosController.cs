@@ -1,14 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Web.Http.Description;
 using AutoMapper;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ScribrAPI.Model;
+using ScribrAPI.DAL;
 
 namespace ScribrAPI.Controllers
 {
@@ -16,23 +14,15 @@ namespace ScribrAPI.Controllers
     [ApiController]
     public class VideosController : ControllerBase
     {
+        private IVideoRepository videoRepository;
         private readonly IMapper _mapper;
-        private readonly scribrdbContext _scribrdbContext;
-        private readonly Video _video = new Video
-        {
-            VideoId = 10,
-            VideoTitle = "ABC",
-            VideoLength = 100,
-            WebUrl = "abc.com",
-            ThumbnailUrl = "abc.jpg",
-            IsFavourite = true
-        };
         private readonly scribrdbContext _context;
 
         public VideosController(scribrdbContext context, IMapper mapper)
         {
             _context = context;
             _mapper = mapper;
+            this.videoRepository = new VideoRepository(new scribrdbContext());
         }
 
         // GET: api/Videos
@@ -88,14 +78,20 @@ namespace ScribrAPI.Controllers
 
         //PUT with PATCH to handle isFavourite
         [HttpPatch("update/{id}")]
-        public Video Patch(int id, [FromBody]JsonPatchDocument<VideoDTO> videoPatch)
+        public VideoDTO Patch(int id, [FromBody]JsonPatchDocument<VideoDTO> videoPatch)
         {
-            Video videoUpdate = _context.Video.Find(id);
-            VideoDTO videoDTOUpdate = _mapper.Map<VideoDTO>(videoUpdate);
-            videoPatch.ApplyTo(videoDTOUpdate);
-            _mapper.Map(videoDTOUpdate, videoUpdate);
-            _context.Update(videoUpdate);
-            return videoUpdate;
+            //get original video object from the database
+            Video originVideo = videoRepository.GetVideoByID(id);
+            //use automapper to map that to DTO object
+            VideoDTO videoDTO = _mapper.Map<VideoDTO>(originVideo);
+            //apply the patch to that DTO
+            videoPatch.ApplyTo(videoDTO);
+            //use automapper to map the DTO back ontop of the database object
+            _mapper.Map(videoDTO, originVideo);
+            //update video in the database
+            _context.Update(originVideo);
+            _context.SaveChanges();
+            return videoDTO;
         }
 
         // POST: api/Videos

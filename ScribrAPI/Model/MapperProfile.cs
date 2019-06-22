@@ -11,6 +11,7 @@ namespace ScribrAPI.Model
         public MapperProfile()
         {
             CreateMap<Video, VideoDTO>();
+            CreateMap<VideoDTO, Video>();
         }
     }
 }
