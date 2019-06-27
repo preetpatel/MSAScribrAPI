@@ -10,6 +10,12 @@ using ScribrAPI.Helper;
 
 namespace ScribrAPI.Controllers
 {
+    // DTO (Data Transfer object) inner class to help with Swagger documentation
+    public class URLDTO
+    {
+        public String URL { get; set; }
+    }
+
     [Route("api/[controller]")]
     [ApiController]
     public class VideosController : ControllerBase
@@ -73,12 +79,20 @@ namespace ScribrAPI.Controllers
 
         // POST: api/Videos
         [HttpPost]
-        public async Task<ActionResult<Video>> PostVideo([FromBody]dynamic data)
+        public async Task<ActionResult<Video>> PostVideo([FromBody]URLDTO data)
         {
-            // Constructing the video object from our helper function
-            String videoURL = data["url"];
-            String videoId = YouTubeHelper.GetVideoIdFromURL(videoURL);
-            Video video = YouTubeHelper.GetVideoInfo(videoId);
+            String videoURL;
+            String videoId;
+            Video video;
+            try
+            {
+                // Constructing the video object from our helper function
+                videoURL = data.URL;
+                videoId = YouTubeHelper.GetVideoIdFromURL(videoURL);
+                video = YouTubeHelper.GetVideoInfo(videoId);
+            } catch {
+                return BadRequest("Invalid YouTube URL");
+            }
 
             // Add this video object to the database
             _context.Video.Add(video);
