@@ -13,9 +13,9 @@ namespace ScribrAPI.Controllers
     [ApiController]
     public class TranscriptionsController : ControllerBase
     {
-        private readonly scribrdbContext _context;
+        private readonly scriberContext _context;
 
-        public TranscriptionsController(scribrdbContext context)
+        public TranscriptionsController(scriberContext context)
         {
             _context = context;
         }

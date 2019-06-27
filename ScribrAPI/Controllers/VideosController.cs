@@ -18,13 +18,13 @@ namespace ScribrAPI.Controllers
     {
         private IVideoRepository videoRepository;
         private readonly IMapper _mapper;
-        private readonly scribrdbContext _context;
+        private readonly scriberContext _context;
 
-        public VideosController(scribrdbContext context, IMapper mapper)
+        public VideosController(scriberContext context, IMapper mapper)
         {
             _context = context;
             _mapper = mapper;
-            this.videoRepository = new VideoRepository(new scribrdbContext());
+            this.videoRepository = new VideoRepository(new scriberContext());
         }
 
         // GET: api/Videos

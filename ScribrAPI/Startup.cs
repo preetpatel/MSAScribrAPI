@@ -29,8 +29,7 @@ namespace ScribrAPI
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
-            services.AddDbContext<scribrdbContext>();
-            services.AddAutoMapper();
+            services.AddDbContext<scriberContext>();
             services.AddMvc();
 
             // Register the Swagger generator, defining 1 or more Swagger documents

@@ -5,14 +5,13 @@ using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace ScribrAPI.Model
 {
-    public partial class scribrdbContext : DbContext
+    public partial class scriberContext : DbContext
     {
-        private readonly IMapper _mapper;
-        public scribrdbContext()
+        public scriberContext()
         {
         }
 
-        public scribrdbContext(DbContextOptions<scribrdbContext> options)
+        public scriberContext(DbContextOptions<scriberContext> options)
             : base(options)
         {
         }
@@ -25,7 +24,7 @@ namespace ScribrAPI.Model
             if (!optionsBuilder.IsConfigured)
             {
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. See http://go.microsoft.com/fwlink/?LinkId=723263 for guidance on storing connection strings.
-                optionsBuilder.UseSqlServer("Server=tcp:msa2019.database.windows.net,1433;Initial Catalog=scribrdb;Persist Security Info=False;User ID=nguyennguyen;Password=testing123*;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;");
+                optionsBuilder.UseSqlServer("Server=tcp:scriber.database.windows.net,1433;Initial Catalog=scriber;Persist Security Info=False;User ID=XLIN928;Password=XIzz4#11cDHr;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;");
             }
         }
 

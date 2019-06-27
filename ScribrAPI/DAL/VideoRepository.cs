@@ -9,9 +9,9 @@ namespace ScribrAPI.DAL
 {
     public class VideoRepository : IVideoRepository, IDisposable
     {
-        private scribrdbContext context;
+        private scriberContext context;
 
-        public VideoRepository(scribrdbContext context)
+        public VideoRepository(scriberContext context)
         {
             this.context = context;
         }
