@@ -37,7 +37,7 @@ namespace ScribrAPI.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Video>>> GetVideo()
         {
-            return await _context.Video.Include(video => video.Transcription).ToListAsync();
+            return await _context.Video.ToListAsync();
         }
 
         // GET: api/Videos/5
