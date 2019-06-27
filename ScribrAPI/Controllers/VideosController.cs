@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+using AutoMapper;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ScribrAPI.Model;
+using ScribrAPI.DAL;
 using ScribrAPI.Helper;
 
 namespace ScribrAPI.Controllers
@@ -14,11 +16,15 @@ namespace ScribrAPI.Controllers
     [ApiController]
     public class VideosController : ControllerBase
     {
+        private IVideoRepository videoRepository;
+        private readonly IMapper _mapper;
         private readonly scriberContext _context;
 
-        public VideosController(scriberContext context)
+        public VideosController(scriberContext context, IMapper mapper)
         {
             _context = context;
+            _mapper = mapper;
+            this.videoRepository = new VideoRepository(new scriberContext());
         }
 
         // GET: api/Videos
@@ -33,8 +39,6 @@ namespace ScribrAPI.Controllers
         public async Task<ActionResult<Video>> GetVideo(int id)
         {
             var video = await _context.Video.FindAsync(id);
-            video.VideoTitle = "test";
-            _context.SaveChanges();
 
             if (video == null)
             {
@@ -72,6 +76,24 @@ namespace ScribrAPI.Controllers
             }
 
             return NoContent();
+        }
+
+        //PUT with PATCH to handle isFavourite
+        [HttpPatch("update/{id}")]
+        public VideoDTO Patch(int id, [FromBody]JsonPatchDocument<VideoDTO> videoPatch)
+        {
+            //get original video object from the database
+            Video originVideo = videoRepository.GetVideoByID(id);
+            //use automapper to map that to DTO object
+            VideoDTO videoDTO = _mapper.Map<VideoDTO>(originVideo);
+            //apply the patch to that DTO
+            videoPatch.ApplyTo(videoDTO);
+            //use automapper to map the DTO back ontop of the database object
+            _mapper.Map(videoDTO, originVideo);
+            //update video in the database
+            _context.Update(originVideo);
+            _context.SaveChanges();
+            return videoDTO;
         }
 
         // POST: api/Videos
