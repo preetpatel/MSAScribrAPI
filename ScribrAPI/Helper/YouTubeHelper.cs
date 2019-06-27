@@ -51,7 +51,7 @@ namespace ScribrAPI.Helper
             }
             return transcriptions;
         }
-
+        
         private static String CleanLink(String subtitleURL)
         {
             subtitleURL = subtitleURL.Replace("\\\\u0026", "&");

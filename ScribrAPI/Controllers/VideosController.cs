@@ -151,15 +151,22 @@ namespace ScribrAPI.Controllers
             {
                 return BadRequest("Search string cannot be null or empty.");
             }
-            var videoIDs = await _context.Transcription.Where(tran => tran.Phrase.Contains(searchString)).Select(video => video.VideoId).ToListAsync();
-            var transcriptions = await _context.Transcription.Where(tran => tran.Phrase.Contains(searchString)).ToListAsync();
-            var videos = await _context.Video.Where(video => videoIDs.Contains(video.VideoId)).ToListAsync();
-            foreach (Video video in videos)
-            {
-                ICollection<Transcription> transcriptionsCollection = transcriptions.Where(tran => tran.VideoId == video.VideoId).ToList();
-                video.Transcription = transcriptionsCollection;
-            }
-            return videos;
+
+            // Choose transcriptions that has the phrase 
+            var videos = await _context.Video.Include(video => video.Transcription).Select(video => new Video {
+                VideoId = video.VideoId,
+                VideoTitle = video.VideoTitle,
+                VideoLength = video.VideoLength,
+                WebUrl = video.WebUrl,
+                ThumbnailUrl = video.ThumbnailUrl,
+                IsFavourite = video.IsFavourite,
+                Transcription = video.Transcription.Where(tran => tran.Phrase.Contains(searchString)).ToList()
+            }).ToListAsync();
+
+            // Removes all videos with empty transcription
+            videos.RemoveAll(video => video.Transcription.Count == 0);
+            return Ok(videos);
+
         }
 
         private bool VideoExists(int id)
