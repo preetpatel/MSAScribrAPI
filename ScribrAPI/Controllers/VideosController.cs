@@ -119,6 +119,12 @@ namespace ScribrAPI.Controllers
                 return BadRequest("Invalid YouTube URL");
             }
 
+            // Determine if we can get transcriptions from YouTube
+            if (!YouTubeHelper.CanGetTranscriptions(videoId))
+            {
+                return BadRequest("Subtitle does not exist on YouTube, failed to add video");
+            }
+
             // Add this video object to the database
             _context.Video.Add(video);
             await _context.SaveChangesAsync();

@@ -18,16 +18,39 @@ namespace ScribrAPI.Helper
             return videoId;
         }
 
-        public static List<Transcription> GetTranscriptions(String videoId)
+        public static Boolean CanGetTranscriptions(String videoId)
+        {
+            if (GetTranscriptionLink(videoId) == null)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        private static String GetTranscriptionLink(String videoId)
         {
             String YouTubeVideoURL = "https://www.youtube.com/watch?v=" + videoId;
             String HTMLSource = new WebClient().DownloadString(YouTubeVideoURL);
 
             // Use regular expression to find the link with the transcription
-            String pattern = "timedtext.+lang=en";
+            String pattern = "timedtext.+?lang=";
             Match match = Regex.Match(HTMLSource, pattern);
-            String subtitleLink = "https://www.youtube.com/api/" + match;
-            subtitleLink = CleanLink(subtitleLink);
+            if (match.ToString() != "")
+            {
+                String subtitleLink = "https://www.youtube.com/api/" + match + "en";
+                subtitleLink = CleanLink(subtitleLink);
+                return subtitleLink;
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        public static List<Transcription> GetTranscriptions(String videoId)
+        {
+            String subtitleLink = GetTranscriptionLink(videoId);
 
             // Use XmlDocument to load the subtitle XML.
             XmlDocument doc = new XmlDocument();
