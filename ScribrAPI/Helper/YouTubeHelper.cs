@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Text.RegularExpressions;
+using System.Web;
 using System.Xml;
 
 namespace ScribrAPI.Helper
@@ -63,10 +64,15 @@ namespace ScribrAPI.Helper
             {
                 for (int i = 0; i < root.ChildNodes.Count; i++)
                 {
+                    // Decode HTTP characters to text
+                    // e.g. &#39; -> '
+                    String phrase = root.ChildNodes[i].InnerText;
+                    phrase = HttpUtility.HtmlDecode(phrase);
+
                     Transcription transcription = new Transcription
                     {
                         StartTime = (int)Convert.ToDouble(root.ChildNodes[i].Attributes["start"].Value),
-                        Phrase = root.ChildNodes[i].InnerText
+                        Phrase = phrase
                     };
 
                     transcriptions.Add(transcription);
