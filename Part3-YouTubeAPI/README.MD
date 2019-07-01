@@ -1,4 +1,10 @@
-YouTube provides an official API for getting information on a YouTube video. This is known as the `YouTube Data API V3`. Our first goal to create a program that retrieves information from this API and store it in our database.
+YouTube provides an official API for getting information on a YouTube video. This is known as the `YouTube Data API V3`. Our first goal to create a program that retrieves video information from this API and store it in our database.
+
+The information we need to get from the API are
+* Title
+* Thumbnail
+* Video length
+* Video URL 
 
 To start using the YouTube API, take a look at this link
 https://developers.google.com/youtube/v3/getting-started
@@ -15,9 +21,9 @@ If you've read the documentation on the YouTube API, you would find that the fol
 
 https://www.googleapis.com/youtube/v3/videos?id=`VIDEOIDHERE`&key=`APIKEYHERE`&part=snippet,contentDetails
 
-What the API returns in a JSON formatted string which we can manipulate easily in ASP.NET.
+The API returns a JSON format string which we can manipulate easily in ASP.NET to extract information.
 
-In order to use this API in ASP.NET, we need to create a so-called helper class, the purpose of this helper class is to deal with all YouTube API retrieving/crawling. Create a new folder in the project called Helper and add a new class under that folder, we will call it `YouTubeHelper`, paste in the following code
+In order to use this API in ASP.NET, we need to create a so-called helper class, the purpose of this helper class is to deal with all YouTube API retrieving/crawling. The purpose of creating this class is to reduce code duplication and make sure that one class only has one responsibility. Create a new folder in the project called Helper and add a new class under that folder, we will call it `YouTubeHelper`, paste in the following code, the code doesn't do much right now but we will make progress shortly :)
 
 ```C#
 using System;
@@ -30,33 +36,67 @@ namespace ScribrAPI.Helper
 {
     public class YouTubeHelper
     {
-        public static void Main(string[] args){
-            GetVideoInfo("BZbChKzedEk");
+        public static void testProgram(){
+            Console.WriteLine(GetVideoIdFromURL("https://www.youtube.com/watch?v=ehvz3iN8pp4"));
+
+            // Pause the program execution
+            Console.ReadLine();
         }
 
-        public static void GetVideoInfo(String videoId)
+        public static void GetVideoIdFromURL(String videoURL)
         {
-
+            // TODO - Extract the video id from the video link.
+            return videoURL;
         }
     }
 }
 ```
 
-There are now two entry points in the program, we need to disable the entry point into the API. Navigate to `Program.cs` as change the method `Main()` to `Main1()` as shown below. We will change this back later.
+Now we need to go to the entry point in the program and call that test function. Navigate to `Program.cs` as under the method `Main()` and perform the following edit. We will change this back later.
 
 ```C#
-public static void Main1(string[] args)
+public static void Main(string[] args)
 {
-    CreateWebHostBuilder(args).Build().Run();
+    Helper.YouTubeHelper.testProgram();
+    // CreateWebHostBuilder(args).Build().Run();
 }
 ``` 
 
+Now we can test this program by changing the launch option from IIS Express to ScribrAPI as we won't need to launch a browser to test this class.
 
-Install `Newtonsoft.Json` from NuGet manager, we will be using this to deal with the content that eh YouTube API returns.
+![alt text](Images/changeLaunchOption.PNG "setBreakpoint")
 
-**The purpose of `GetVideoInfo()` is to return a Video object that the API can use to create an entry in the database.**
+If everything goes well, the string "https://www.youtube.com/watch?v=ehvz3iN8pp4" will be printed in the console. Now we are ready to code some login into our crawler.
 
-We will first fetch the JSON into our application. Add the following code in the `GetVideoInfo()`
+# Extract video ID from video link
+Our first goal is to extract the unique video ID from the link.
+For example, The video ID of https://www.youtube.com/watch?v=ehvz3iN8pp4 would be ehvz3iN8pp4, and the video ID of https://www.youtube.com/watch?v=YQZ2UeOTO3I would be YQZ2UeOTO3I. Seeing a pattern here? The video ID is always after the equal sign in a standard YouTube link. In this tutorial, we will not consider the shortened link such as `https://youtu.be/YQZ2UeOTO3I` or additional parameters such as https://www.youtube.com/watch?v=YQZ2UeOTO3I`&t=10`, this is an easy task left as an exercise for you.
+
+ So, in order to extract the video ID, the `=` sign is the key. A simple way of doing so would be to find the location of the `=` sign in the string and add one to it, that would make sure that it is the beginning of the video ID.
+
+ ```C#
+ int indexOfFirstId = videoURL.IndexOf("=") + 1;
+ ```
+
+ Then, we can use the `Substring()` in the string object to extract a substring.
+ ```C#
+ String videoId = videoURL.Substring(indexOfFirstId);
+ return videoId;
+ ```
+
+Your function should look like this.
+![alt text](Images/GetVideoIdFromURL.PNG "setBreakpoint")
+
+Test your function with your `testProgram()`, you should know how to test it at this point.
+
+# Call YouTube Data V3 API to get video information 
+Our next step is to use this video ID to call the YouTube Data V3 API from our API.
+
+Install `Newtonsoft.Json` from NuGet manager, we will be using this to deal with the content that the YouTube API returns.
+
+Create a `public static` method called `GetVideoInfo(String videoId)` that returns a `Video` object, the purpose of this method is to return a Video object that the API can use to create an entry in the database.
+
+We will first fetch the JSON into our application. Add the following code in the `GetVideoInfo(String videoId)`
 
 ```C#
 String APIKey = "YOURAPIKEY";
@@ -65,11 +105,11 @@ String YouTubeAPIURL = "https://www.googleapis.com/youtube/v3/videos?id=" + vide
 // Use an http client to grab the JSON string from the web.
 String videoInfoJSON = new WebClient().DownloadString(APIurl);
 
-// Using dynamic object helps us to more effciently extract infomation from a large JSON String.
+// Using dynamic object helps us to more efficiently extract information from a large JSON String.
 dynamic jsonObj = JsonConvert.DeserializeObject<dynamic>(videoInfoJSON);
 ```
 
-The videoInfoJSON String has been parsed into a dynamic object which would allow us to manipulate the information easily. Next we will extract the necessary information from the jsonObj
+The videoInfoJSON String has been parsed into a dynamic object which would allow us to manipulate the information easily. Next we will extract the necessary information from the jsonObj. To understand why it's constructed that way it is below, we need to take a look at the JSON that YouTube API returns. 
 
 ```C#
 // Extract information from the dynamic object.
@@ -83,15 +123,17 @@ TimeSpan videoDuration = XmlConvert.ToTimeSpan(durationString);
 int duration = (int) videoDuration.TotalSeconds;
 ```
 
-Now that we have everything we need, we will create a Video object from our API model!
+Now that we have everything we need, we can now create a Video object from our model.
 ```C#
 // Create a new Video Object from the model defined in the API.
-Video video = new Video();
-video.VideoTitle = title;
-video.WebUrl = videoUrl;
-video.VideoLength = (int)videoDuration.TotalSeconds;
-video.IsFavourite = false;
-video.ThumbnailUrl = thumbnailURL;
+Video video = new Video
+{
+    VideoTitle = title,
+    WebUrl = videoUrl,
+    VideoLength = duration,
+    IsFavourite = false,
+    ThumbnailUrl = thumbnailURL
+};
 return video;
 ```
 

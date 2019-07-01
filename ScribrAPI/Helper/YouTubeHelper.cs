@@ -11,6 +11,12 @@ namespace ScribrAPI.Helper
 {
     class YouTubeHelper
     {
+        public static void testProgram()
+        {
+            Console.WriteLine(GetVideoIdFromURL("=HELLO"));
+            Console.ReadLine();
+        }
+
         public static String GetVideoIdFromURL(String videoURL) {
             // Extract the string after the '=' sign
             // e.g. https://www.youtube.com/watch?v=ehvz3iN8pp4 becomes ehvz3iN8pp4 
@@ -115,7 +121,7 @@ namespace ScribrAPI.Helper
             {
                 VideoTitle = title,
                 WebUrl = videoUrl,
-                VideoLength = (int)videoDuration.TotalSeconds,
+                VideoLength = duration,
                 IsFavourite = false,
                 ThumbnailUrl = thumbnailURL
             };
