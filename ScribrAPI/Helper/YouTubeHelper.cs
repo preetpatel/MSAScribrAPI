@@ -38,6 +38,7 @@ namespace ScribrAPI.Helper
         private static String GetTranscriptionLink(String videoId)
         {
             String YouTubeVideoURL = "https://www.youtube.com/watch?v=" + videoId;
+            // Use a WebClient to download the source code.
             String HTMLSource = new WebClient().DownloadString(YouTubeVideoURL);
 
             // Use regular expression to find the link with the transcription
@@ -92,7 +93,6 @@ namespace ScribrAPI.Helper
             subtitleURL = subtitleURL.Replace("\\\\u0026", "&");
             subtitleURL = subtitleURL.Replace("\\", "");
             return (subtitleURL);
-
         }
 
         public static Video GetVideoInfo(String videoId)

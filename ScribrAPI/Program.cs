@@ -14,8 +14,7 @@ namespace ScribrAPI
     {
         public static void Main(string[] args)
         {
-            Helper.YouTubeHelper.testProgram();
-            // CreateWebHostBuilder(args).Build().Run();
+            CreateWebHostBuilder(args).Build().Run();
         }
 
         public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>

@@ -139,9 +139,9 @@ return video;
 
 Note that this method returns a video object, so we need to change the method signature to tell the compiler that we are returning an video object. Change `public static void GetVideoInfo(String videoId)` to `public static Video GetVideoInfo(String videoId)`
 
-Now that the method is done, we can test this by calling this method in `Main()`
+Now that the method is done, we can test this by calling this method in `testProgram()`
 ```C#
-public static void Main(String[] args) {
+public static void testProgram() {
     GetVideoInfo("BZbChKzedEk");
 }
 ```
@@ -154,51 +154,43 @@ If we run the program now, we can see that the video object contains the informa
 
 We are done with constructing the Video object! We are now ready to incorporate this little helper function into our API.
 
+# Insert the video object into our database
 We want to use the `YouTubeHelper` whenever we receive a POST request in the `/Video` endpoint.
 
-To do this, we need to go back to the API project.
-Delete the `Main()` in YouTubeHelper and change `Main1()` back to `Main()` in `Program.cs` so that the API launches again normally.
+Before we do that, we need to go back to the API project. Remove the call to YouTubeHelper and uncomment `CreateWebHostBuilder()` in `Program.cs`, so that the API launches again normally.
 
+![alt text](Images/programMain.PNG "programMain")
 
 We now need to modify the VideoController, navigate to the method that handles POST request in VideoController. Instead of receiving a whole video object from the request body, we will edit this method so that it takes an YouTube URL.
 
-In order to process a POST request, we first need to obtain the request body so we know what information to process. Modify the signature of the `PostVideo()` to the following
+In order to process a POST request, we first need to obtain the request body so we know what information to process. Modify the signature of the `PostVideo()` to the following.
+
 ```c#
-public async Task<ActionResult<Video>> PostVideo([FromBody]dynamic data)
-```
-Again, this is similar to what we did before, we are converting a string of text to a dynamic object so that it gets resolved at runtime.
-We'll extract the URL from the dynamic object
-
-```C#
-String URL = data["url"];
+public async Task<ActionResult<Video>> PostVideo([FromBody]URLDTO data)
 ```
 
-These two lines above tells the program to extract the value from the "url" key in the json request body.
+You will notice that there is an error, that's because we don't have URLDTO class, we will create this class as an inner class now in VideosController.
 
-Now that we have the URL, we can finally call the `GetVideoInfo(String videoId)` in `YouTubeHelper`. Wait... Can we? Note our plan is to pass the entire YouTube url in the request body, but, `GetVideoInfo()` only deals with videoId, not the entire Video link.
+![alt text](Images/videoControllerDTO.PNG "videoControllerDTO")
 
-We will need to create another method in the helper class to extract video id from the video link.
+Why do we do this? This is because the we could get the information from the request body, we could use dynamic object as before, but, using a concrete class would allow Swagger to document the API better, you will see what I mean soon. 
+For now, go back to `PostVideo()` and add in the following code.
 
-```C#
-static String GetVideoIdFromURLURLURLURLURLURLURLURLURL(String videoURL) {
-    // Extract the string after the = sign
-    // e.g. https://www.youtube.com/watch?v=ehvz3iN8pp4 becomes ehvz3iN8pp4 
-    int indexOfFirstId = videoURL.IndexOf("=") + 1;
-    String videoId = videoURL.Substring(indexOfFirstId);
-    return videoId;
-}
-```
-
-We will now call the two methods we created in our `PostVideo()` in `VideoController.cs`, your code should be similar to the following:
 ```C#
 // POST: api/Videos
 [HttpPost]
-public async Task<ActionResult<Video>> PostVideo([FromBody]dynamic data)
+public async Task<ActionResult<Video>> PostVideo([FromBody]URLDTO data)
 {
-    // Constructing the video object from our helper function
-    String videoURL = data["url"];
-    String videoId = YouTubeHelper.GetVideoIdFromURLURLURLURLURLURLURLURL(videoURL);
-    Video video = YouTubeHelper.GetVideoInfo(videoId);
+    Video video;
+    try
+    {
+        // Constructing the video object from our helper function
+        videoURL = data.URL;
+        videoId = YouTubeHelper.GetVideoIdFromURL(videoURL);
+        video = YouTubeHelper.GetVideoInfo(videoId);
+    } catch {
+        return BadRequest("Invalid YouTube URL");
+    }
 
     // Add this video object to the database
     _context.Video.Add(video);
@@ -211,7 +203,7 @@ public async Task<ActionResult<Video>> PostVideo([FromBody]dynamic data)
 If we launch the application now and pass the following JSON in the request body
 ```JSON
 {
-    "url" : "https://www.youtube.com/watch?v=-Cu3wW8rNAs"
+    "URL" : "https://www.youtube.com/watch?v=-Cu3wW8rNAs"
 }
 ```
 
@@ -219,3 +211,256 @@ We would receive a response with the video info.
 ![alt text](Images/PostVideoJson.PNG "PostVideo JSON response")
 
 And if you make a GET request to /Videos in Swagger UI, you would see your newly added video.
+
+# Add transcriptions to the corresponding video 
+Now that we have video information in our database, we will need to store the transcriptions in our database. The approach we will be taking is to store every phrase in the transcription in our Transcription database. This probably is the most difficult and the most interesting part of the API. :)
+
+> WARNING: This part of the program uses an undocumented API of the YouTube website, which is done by emulating a user visiting YouTube and crawl around the source code. So there is no guarantee that it won't stop working tomorrow.
+
+Where do we go when we are trying to get information from YouTube? You guessed it, `YouTubeHelper.cs`. We will need to create a new private method called GetTranscriptionLink which takes a videoId as parameter and returns a string, the link of the YouTube transcription.
+
+Your method signature should be similar to this
+```C#
+private static String GetTranscriptionLink(String videoId)
+```
+
+The logic of the method would be: visiting the YouTube Video on a web client, download the source code, attempt to find the transcription link from the source code, and return that link.
+
+Our first step would be to get the source code of the YouTube video link.
+
+```C#
+String YouTubeVideoURL = "https://www.youtube.com/watch?v=" + videoId;
+// Use a WebClient to download the source code.
+String HTMLSource = new WebClient().DownloadString(YouTubeVideoURL);
+```
+
+Then, from the source code, we need to find something that looks like
+
+```
+https:\/\/www.youtube.com\/api\/timedtext?asr_langs=en%2Cru%2Cko%2Cde%2Cja%2Cit%2Cpt%2Cfr%2Ces%2Cnl\\u0026hl=en\\u0026signature=D7A977E16056239A6C8B1AA57674FE6A558D4903.7CA81B4A709C12AFF93C5806EADE885F75142DE4\\u0026expire=1562049392\\u0026xoaf=1\\u0026xorp=True\\u0026key=yttt1\\u0026caps=asr\\u0026v=hLvddwpu_PI\\u0026sparams=asr_langs%2Ccaps%2Cv%2Cxoaf%2Cxorp%2Cexpire\\u0026kind=asr\\u0026lang=en\
+```
+
+Here is another one
+
+```
+https:\/\/www.youtube.com\/api\/timedtext?v=MiCftTLUzCI\\u0026expire=1562049563\\u0026asr_langs=fr%2Cpt%2Cnl%2Ces%2Cit%2Cde%2Cen%2Cja%2Cru%2Cko\\u0026caps=asr\\u0026sparams=asr_langs%2Ccaps%2Cv%2Cexpire\\u0026signature=94D9E4A8854CA3328A6893F03412778B67661DC0.9AFB5F65EDBA743A9379666A8E09F250607622F4\\u0026key=yttt1\\u0026hl=en\\u0026lang=en
+```
+
+This may look very cryptic now, there are some *escape* characters and *HTML characters* we need to deal with, we will worry about them later, ignore that for now, can you find any pattern between the two strings?
+
+> Observation:
+They both begin with `https:\/\/www.youtube.com\/api\/timedtext?` and end with `lang=en`, if you look at the source code of the video link, there are no other link that looks like this, we can use this pattern to uniquely identify the transcription link.
+
+## Regular Expression
+We need to use a tool called Regular Expression, aka RegEx, to find this pattern, add the following code into your method.
+```C#
+String pattern = "timedtext.+?lang=";
+Match match = Regex.Match(HTMLSource, pattern);
+```
+
+The magic lies in the string `pattern`
+
+```
+timedtext.+?lang=
+```
+
+| Symbol   |      Meaning      |
+|----------|--------------|
+| timedtext|  String literal, used to match exactly this string |
+| .        |  Any character   |
+| +        | Match one or more character proceeding this symbol, in this case, it               is '.', which is any character  |
+| ?        |  Once or none, in this case, we are find the last occurrence of this                pattern  |
+| lang=    |  String literal, used to match exactly this string |
+
+To translate string into English: Get me the last string that starts with `timedtext` and end with `lang=`, capturing any characters in between the two strings.
+
+For example, given this String:
+```
+https:\/\/www.youtube.com\/api\/timedtext?asr_langs=en%2Cru%2Cko%2Cde%2Cja%2Cit%2Cpt%2Cfr%2Ces%2Cnl\\u0026hl=en\\u0026signature=D7A977E16056239A6C8B1AA57674FE6A558D4903.7CA81B4A709C12AFF93C5806EADE885F75142DE4\\u0026expire=1562049392\\u0026xoaf=1\\u0026xorp=True\\u0026key=yttt1\\u0026caps=asr\\u0026v=hLvddwpu_PI\\u0026sparams=asr_langs%2Ccaps%2Cv%2Cxoaf%2Cxorp%2Cexpire\\u0026kind=asr\\u0026lang=en\
+```
+
+It would match
+
+```
+timedtext?asr_langs=en%2Cru%2Cko%2Cde%2Cja%2Cit%2Cpt%2Cfr%2Ces%2Cnl\\u0026hl=en\\u0026signature=D7A977E16056239A6C8B1AA57674FE6A558D4903.7CA81B4A709C12AFF93C5806EADE885F75142DE4\\u0026expire=1562049392\\u0026xoaf=1\\u0026xorp=True\\u0026key=yttt1\\u0026caps=asr\\u0026v=hLvddwpu_PI\\u0026sparams=asr_langs%2Ccaps%2Cv%2Cxoaf%2Cxorp%2Cexpire\\u0026kind=asr\\u0026lang=
+```
+
+Given that the proceeding and ending strings are constants, we can simply add it into the program.
+```C#
+String subtitleLink = "https://www.youtube.com/api/" + match + "en";
+return subtitleLink;
+```
+
+What happens if the transcriptions can't be found? The link wouldn't make sense, so let's add in a check, we will return null if the string cannot be found.
+
+```C#
+if (match.ToString() != "")
+{
+    String subtitleLink = "https://www.youtube.com/api/" + match + "en";
+    subtitleLink = CleanLink(subtitleLink);
+    return subtitleLink;
+}
+else
+{
+    return null;
+}
+```
+
+We are almost done, we now need to address escape character and HTML characters, since this is a different responsibility, let's put this into a different private function called `CleanLink()` and let our `GetTranscriptionLink()` to call this method.
+
+Here is what characters mean:
+|String|Character|
+|----------|---------|
+|\\\\u0026 |"&"|
+|\\\\      |"" (Nothing)|
+
+
+Here is the code for replacing the String with the corresponding characters, this is self-explanatory.
+```C#
+private static String CleanLink(String subtitleURL)
+{
+    subtitleURL = subtitleURL.Replace("\\\\u0026", "&");
+    subtitleURL = subtitleURL.Replace("\\", "");
+    return (subtitleURL);
+}
+```
+
+Your final `GetTranscriptionLink()` after adding in `CleanLink()` should look like this:
+```C#
+private static String GetTranscriptionLink(String videoId)
+{
+    String YouTubeVideoURL = "https://www.youtube.com/watch?v=" + videoId;
+    // Use a WebClient to download the source code.
+    String HTMLSource = new WebClient().DownloadString(YouTubeVideoURL);
+
+    // Use regular expression to find the link with the transcription
+    String pattern = "timedtext.+?lang=";
+    Match match = Regex.Match(HTMLSource, pattern);
+    if (match.ToString() != "")
+    {
+        String subtitleLink = "https://www.youtube.com/api/" + match + "en";
+        subtitleLink = CleanLink(subtitleLink);
+        return subtitleLink;
+    }
+    else
+    {
+        return null;
+    }
+}
+```
+
+Now we are finally ready to make a list of transcriptions, create a new public method called `GetTranscriptions(String videoId)`.
+
+```C#
+public static List<Transcription> GetTranscriptions(String videoId)
+    {
+        String subtitleLink = GetTranscriptionLink(videoId);
+
+        // Use XmlDocument to load the subtitle XML.
+        XmlDocument doc = new XmlDocument();
+        doc.Load(subtitleLink);
+        XmlNode root = doc.ChildNodes[1];
+
+        // Go through each tag and look for start time and phrase.
+        List<Transcription> transcriptions = new List<Transcription>();
+        if (root.HasChildNodes)
+        {
+            for (int i = 0; i < root.ChildNodes.Count; i++)
+            {
+                // Decode HTTP characters to text
+                // e.g. &#39; -> '
+                String phrase = root.ChildNodes[i].InnerText;
+                phrase = HttpUtility.HtmlDecode(phrase);
+
+                Transcription transcription = new Transcription
+                {
+                    StartTime = (int)Convert.ToDouble(root.ChildNodes[i].Attributes["start"].Value),
+                    Phrase = phrase
+                };
+
+                transcriptions.Add(transcription);
+            }
+        }
+        return transcriptions;
+    }
+```
+
+In this code, we load the XML source code up, add each phrase and start time the the list of Transcription objects and return. We would be able to use this method in `VideosController` whenever we receive a video request.
+
+Now that `YouTubeHelper` class has everything needed to get a list of transcriptions, it is time for us to incorporate this into our `VideosController`.
+
+We will do our modification on `PostVideo()` as we want to add transcriptions into our database when we receive a new video request.
+
+```C#
+// POST: api/Videos
+[HttpPost]
+public async Task<ActionResult<Video>> PostVideo([FromBody]URLDTO data)
+{
+    Video video;
+    try
+    {
+        // Constructing the video object from our helper function
+        videoURL = data.URL;
+        videoId = YouTubeHelper.GetVideoIdFromURL(videoURL);
+        video = YouTubeHelper.GetVideoInfo(videoId);
+    } catch {
+        return BadRequest("Invalid YouTube URL");
+    }
+
+    // Add this video object to the database
+    _context.Video.Add(video);
+    await _context.SaveChangesAsync();
+
+    // Get the primary key, id of the video, note this is not the video ID on YouTube
+    int id = video.VideoId;
+
+    // This is needed because context are NOT thread safe, therefore we create another context for the following task.
+    // We will be using this to insert transcriptions into the database on a separate thread
+    // So that it doesn't block the API.
+    scriberContext tempContext = new scriberContext();
+    TranscriptionsController transcriptionsController = new TranscriptionsController(tempContext);
+
+    // Return success code and the info on the video object
+    return CreatedAtAction("GetVideo", new { id = video.VideoId }, video);
+}
+```
+
+Below the `_context.SaveChangesAsync()`, we will call our new methods in YouTubeHelper. Before we do any actual coding, let's consider a problem:
+
+> What could happen if there are thousands of phrases to be stored in the database? We would need to process the phrases one by one, what problem could this present?
+
+If we do add the phrases one by one in the main program, waiting for all the phrases to be added in the database will inevitably take a very long time. What does this mean? Consider the arrival of a second API call while we are processing the transcriptions. Since our main program is busy, the second API call would have no choice but to wait until all the transcriptions are saved into the database. The code is *blocking* other API calls. 
+
+This is why we need to use multi-threading, the goal of using `System.Threading` is to delegate time consuming task to another thread so that the main thread is not blocked. .NET provides a very simple class that deals with simple multithreading, `Task` class under the namespace `System.Threading.Tasks`. Add the following code after `_context.SaveChangesAsync()` but before `return CreatedAtAction("GetVideo", new { id = video.VideoId }, video)`
+
+```C#
+// Get the primary key of the newly created video record
+int id = video.VideoId;
+
+// This is needed because context are NOT thread safe, therefore we create another context for the following task.
+// We will be using this to insert transcriptions into the database on a separate thread
+// So that it doesn't block the API.
+scriberContext tempContext = new scriberContext();
+TranscriptionsController transcriptionsController = new TranscriptionsController(tempContext);
+
+// This will be executed in the background.
+Task addCaptions = Task.Run(async () =>
+{
+    // Get a list of captions from YouTubeHelper
+    List<Transcription> transcriptions = new List<Transcription>();
+    transcriptions = YouTubeHelper.GetTranscriptions(videoId);
+
+    for (int i = 0; i < transcriptions.Count; i++)
+    {
+        // Get the transcription objects form transcriptions and assign VideoId to id, the primary key of the newly inserted video
+        Transcription transcription = transcriptions.ElementAt(i);
+        transcription.VideoId = id;
+        // Add this transcription to the database
+        await transcriptionsController.PostTranscription(transcription);
+    }
+});
+```
+
+Now if we test the code on Swagger, by providing a YouTube link via POST /Videos, the transcriptions should be added in a non-blocking way in the background, to see this, make a Get /Transcriptions and confirm that transcriptions are being added.
+
+This module could be very time consuming and error prone, if you are experiencing any problems, try to see if you can debug yourself, consult Google/Stack Overflow if need be, if you are still stuck, you more than welcome to make a post <del>request</del> on facebook, I am sure MSPs and other students will be able to help. 
