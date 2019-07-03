@@ -2,21 +2,6 @@
 
 `JSONPatch` is a method to update documents partially on an API, in which the value to be changed is described exactly how we want to modify a document, i.e. we can change a value/ a field of the document without having to send along the rest of the unchanged values.
 
-First of all, we are going to install the following **NuGet** packages:
-
-* Microsoft.AspNetCore.JsonPatch (2.2.0)
-* AutoMapper.Extensions.Microsoft.DependencyInjection (6.1.1)
-
-Other than the above NuGet packages, you should have a look back to check if the following NuGet packages are already installed in your project.
-
-* Microsoft.AspNet.WebApi.Core
-* Microsoft.AspNetCore.App
-* Microsoft.AspNetCore.Razor.Design
-* Microsoft.EntityFrameworkCore.Design
-* Microsoft.EntityFrameworkCore.SqlServer
-* Microsoft.NETCore.App
-* Swashbuckle.AspNetCore
-
 ## 1.Data Access Layer (DAL)
 
 ***The Repository***    
@@ -163,52 +148,14 @@ public class VideosController : ControllerBase
 ```
 
 ## 2. Model
-
 ### Using Automapper In ASP.net Core
+#### Creating VideoDTO
 
-#### Setup
+Our web API now exposes the database entities to the client. The client receives data from your database. However, sometimes you might want to change the data format that would be sent to the users.
 
-From the `Package Manager Console`, we will install the following Nuget package :
+To accomplish this, we will define a `data transfer object` (DTO). A `DTO` is an object that defines how the data will be sent over the network.
 
-`Install-Package AutoMapper.Extensions.Microsoft.DependencyInjection`
-
-This will also in turn install the Automapper nuget package if you don’t have it already.
-
-Inside your ConfigureServices method of your startup.cs, add a call to add the AutoMapper required services like so :
-
-```csharp
-public void ConfigureServices(IServiceCollection services)
-        {
-            services.AddDbContext<scriberContext>();
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
-            services.AddAutoMapper(typeof(Startup));
-//some existing code lines
-```
-#### Adding AutoMapper Profile
-
-MapperProfile.cs
-
-```csharp
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using AutoMapper;
-
-namespace ScribrAPI.Model
-{
-    public class MapperProfile: Profile
-    {
-        public MapperProfile()
-        {
-            CreateMap<Video, VideoDTO>();
-            CreateMap<VideoDTO, Video>();
-        }
-    }
-}
-```
-## Video
-Video.cs
+Inside `Video.cs` file, we will create a new VideoDTO class with the following code:
 
 ```csharp
 [DataContract]
@@ -234,10 +181,71 @@ Video.cs
     }
 ```
 
-## Videos Controllers
-VideoController.cs
+As a result, the `VideoDTO` class includes all of the properties from the Video model as above.
+
+#### Setup AutoMapper
+
+From the `Package Manager Console`, we will install the following Nuget package :
+
+`Install-Package AutoMapper.Extensions.Microsoft.DependencyInjection`
+
+This will also in turn install the Automapper NuGet package if you don’t have it already.
+
+Inside your ConfigureServices method of your `startup.cs`, add a call to add the AutoMapper required services like so :
 
 ```csharp
+public void ConfigureServices(IServiceCollection services)
+        {
+            services.AddDbContext<scriberContext>();
+            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+            services.AddAutoMapper(typeof(Startup));
+//some existing code lines
+```
+#### Adding AutoMapper Profile
+
+Inside the Model folder, create a file named `MapperProfile.cs` with the following code. We will create two mappings, one from Video to VideoDTO , and the other one map VideoDTO to Video.
+
+```csharp
+using AutoMapper;
+
+namespace ScribrAPI.Model
+{
+    public class MapperProfile: Profile
+    {
+        public MapperProfile()
+        {
+            CreateMap<Video, VideoDTO>();
+            CreateMap<VideoDTO, Video>();
+        }
+    }
+}
+```
+When your application runs, Automapper will go through your code looking for classes that inherit from “Profile” and will load their configuration.
+
+#### Videos Controllers
+
+Now we get to the main part that will create a PATCH request to handle partially updating a single property of Video.
+
+From the Package Manager console, run the following command to install the official JSON Patch library:
+
+`Install-Package Microsoft.AspNetCore.JsonPatch`
+
+Inside the `VideoController.cs` file, add the mapper instance and PATCH methods as below:
+
+```csharp
+        private IVideoRepository videoRepository;
+        private readonly IMapper _mapper;
+        private readonly scriberContext _context;
+
+        public VideosController(scriberContext context, IMapper mapper)
+        {
+            _context = context;
+            _mapper = mapper;
+            this.videoRepository = new VideoRepository(new scriberContext());
+        }
+
+//...some other coding lines
+
 //PUT with PATCH to handle isFavourite
         [HttpPatch("update/{id}")]
         public VideoDTO Patch(int id, [FromBody]JsonPatchDocument<VideoDTO> videoPatch)
@@ -257,24 +265,7 @@ VideoController.cs
         }
 ```
 
-```csharp
-public class VideosController : ControllerBase
-    {
-        private IVideoRepository videoRepository;
-        private readonly IMapper _mapper;
-        private readonly scriberContext _context;
-
-        public VideosController(scriberContext context, IMapper mapper)
-        {
-            _context = context;
-            _mapper = mapper;
-            this.videoRepository = new VideoRepository(new scriberContext());
-        }
-```
-
-## Startup.cs
-
-Add the following code in Startup.cs
+Then in the `Startup.cs`, we will add the mapper as below:
 
 ```csharp
 using AutoMapper;
@@ -291,10 +282,9 @@ using Microsoft.AspNetCore.Mvc;
 ...//code continue
 ```
 
-`node -v`  
+## References:
 
-[here.](https://www.npmjs.com/get-npm)  
-
-_`npm init <initializer>`_
-
-**src**
+* [Using Automapper In ASP.net Core](https://dotnetcoretutorials.com/2017/09/23/using-automapper-asp-net-core/)
+* [Create Data Transfer Objects (DTOs)](https://docs.microsoft.com/en-us/aspnet/web-api/overview/data/using-web-api-with-entity-framework/part-5)
+* [JSON Patch With ASP.net Core](https://dotnetcoretutorials.com/2017/11/29/json-patch-asp-net-core/)
+* [Implementing the Repository and Unit of Work Patterns in an ASP.NET MVC Application (9 of 10)](https://docs.microsoft.com/en-us/aspnet/mvc/overview/older-versions/getting-started-with-ef-5-using-mvc-4/implementing-the-repository-and-unit-of-work-patterns-in-an-asp-net-mvc-application?fbclid=IwAR0339QgLfYu2DuxWmkjsI0y1oxcyaDdZknQvQtP11SMbu_XZjOU5IXNcVI)
