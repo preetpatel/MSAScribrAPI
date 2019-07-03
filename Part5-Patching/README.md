@@ -17,7 +17,7 @@ Other than the above NuGet packages, you should have a look back to check if the
 * Microsoft.NETCore.App
 * Swashbuckle.AspNetCore
 
-## Data Access Layer (DAL)
+## 1.Data Access Layer (DAL)
 
 ***The Repository***    
 The repository is intended to create an abstraction layer between the data access layer (DAL) and the business logic layer of an application. Implementing these patterns can help insulate your application from changes in the data store and can facilitate automated unit testing or test-driven development (TDD). (source: [Microsoft](https://docs.microsoft.com/en-us/aspnet/mvc/overview/older-versions/getting-started-with-ef-5-using-mvc-4/implementing-the-repository-and-unit-of-work-patterns-in-an-asp-net-mvc-application?fbclid=IwAR0339QgLfYu2DuxWmkjsI0y1oxcyaDdZknQvQtP11SMbu_XZjOU5IXNcVI))
@@ -26,17 +26,17 @@ The following illustration shows the differences when the controller and context
 
 ![Repository](./img/repo1.png)
 
+You can refer to this [link](https://docs.microsoft.com/en-us/aspnet/mvc/overview/older-versions/getting-started-with-ef-5-using-mvc-4/implementing-the-repository-and-unit-of-work-patterns-in-an-asp-net-mvc-application?fbclid=IwAR0339QgLfYu2DuxWmkjsI0y1oxcyaDdZknQvQtP11SMbu_XZjOU5IXNcVI) to find out more about Repository and Unit of Work Patterns in an ASP.NET MVC Application
+
 There are different ways to implement the repository. The approach to implementing an abstraction layer shown in this step is one of the options.
 
-### 1. IVideoRepository
+### Creating The Video Repository Class
 
-You can refer to this [link](https://docs.microsoft.com/en-us/aspnet/mvc/overview/older-versions/getting-started-with-ef-5-using-mvc-4/implementing-the-repository-and-unit-of-work-patterns-in-an-asp-net-mvc-application?fbclid=IwAR0339QgLfYu2DuxWmkjsI0y1oxcyaDdZknQvQtP11SMbu_XZjOU5IXNcVI) to find out more about Repository and Unit of Work Patterns in an ASP.NET MVC Application
+In the DAL folder, create a class file named `IVideoRepository.cs` with the following code:
 
 ```csharp
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using ScribrAPI.Model;
 
 namespace ScribrAPI.DAL
@@ -53,8 +53,11 @@ namespace ScribrAPI.DAL
 }
 ```
 
-### 2. VideoRepository
-VideoRepository.cs
+This code declares a typical set of CRUD methods (Create, Read, Update, and Delete), including two read methods:
+* `GetVideos()` method returns all Video entities, and
+* `GetVideoByID(int VideoId)` finds a single Video entity by ID.
+
+In the DAL folder, create a class file named `VideoRepository.cs` file, which implements the IVideoRepository interface, with the following code:
 
 ```csharp
 using System;
@@ -128,9 +131,60 @@ namespace ScribrAPI.DAL
     }
 }
 ```
-## Model
 
-### AutoMapper Profile
+The database context is defined in a class variable, and the constructor expects a parameter of the context:
+
+```csharp
+private scriberContext context;
+
+public VideoRepository(scriberContext context)
+{
+    this.context = context;
+}
+```
+### Change the Videos Controller to Use the Repository
+
+In VideosController.cs, add the following code - the Video Repository - as a IVideoRepository instance and call it in the constructor `VideosController(scriberContext context, IMapper mapper)`.
+
+```csharp
+using Microsoft.AspNetCore.Mvc;
+using ScribrAPI.DAL;
+
+//some existing code lines
+
+public class VideosController : ControllerBase
+    {
+        private IVideoRepository videoRepository;
+
+        public VideosController(scriberContext context, IMapper mapper)
+            {
+                this.videoRepository = new VideoRepository(new scriberContext());
+            }
+```
+
+## 2. Model
+
+### Using Automapper In ASP.net Core
+
+#### Setup
+
+From the `Package Manager Console`, we will install the following Nuget package :
+
+`Install-Package AutoMapper.Extensions.Microsoft.DependencyInjection`
+
+This will also in turn install the Automapper nuget package if you don’t have it already.
+
+Inside your ConfigureServices method of your startup.cs, add a call to add the AutoMapper required services like so :
+
+```csharp
+public void ConfigureServices(IServiceCollection services)
+        {
+            services.AddDbContext<scriberContext>();
+            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+            services.AddAutoMapper(typeof(Startup));
+//some existing code lines
+```
+#### Adding AutoMapper Profile
 
 MapperProfile.cs
 
@@ -203,6 +257,21 @@ VideoController.cs
         }
 ```
 
+```csharp
+public class VideosController : ControllerBase
+    {
+        private IVideoRepository videoRepository;
+        private readonly IMapper _mapper;
+        private readonly scriberContext _context;
+
+        public VideosController(scriberContext context, IMapper mapper)
+        {
+            _context = context;
+            _mapper = mapper;
+            this.videoRepository = new VideoRepository(new scriberContext());
+        }
+```
+
 ## Startup.cs
 
 Add the following code in Startup.cs
@@ -227,7 +296,5 @@ using Microsoft.AspNetCore.Mvc;
 [here.](https://www.npmjs.com/get-npm)  
 
 _`npm init <initializer>`_
-
-http://localhost:3000/
 
 **src**
