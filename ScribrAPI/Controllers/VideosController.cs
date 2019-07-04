@@ -12,6 +12,12 @@ using ScribrAPI.Helper;
 
 namespace ScribrAPI.Controllers
 {
+    // DTO (Data Transfer object) inner class to help with Swagger documentation
+    public class URLDTO
+    {
+        public String URL { get; set; }
+    }
+
     [Route("api/[controller]")]
     [ApiController]
     public class VideosController : ControllerBase
@@ -98,12 +104,26 @@ namespace ScribrAPI.Controllers
 
         // POST: api/Videos
         [HttpPost]
-        public async Task<ActionResult<Video>> PostVideo([FromBody]dynamic data)
+        public async Task<ActionResult<Video>> PostVideo([FromBody]URLDTO data)
         {
-            // Constructing the video object from our helper function
-            String videoURL = data["url"];
-            String videoId = YouTubeHelper.GetVideoIdFromURL(videoURL);
-            Video video = YouTubeHelper.GetVideoInfo(videoId);
+            String videoURL;
+            String videoId;
+            Video video;
+            try
+            {
+                // Constructing the video object from our helper function
+                videoURL = data.URL;
+                videoId = YouTubeHelper.GetVideoIdFromURL(videoURL);
+                video = YouTubeHelper.GetVideoInfo(videoId);
+            } catch {
+                return BadRequest("Invalid YouTube URL");
+            }
+
+            // Determine if we can get transcriptions from YouTube
+            if (!YouTubeHelper.CanGetTranscriptions(videoId))
+            {
+                return BadRequest("Subtitle does not exist on YouTube, failed to add video");
+            }
 
             // Add this video object to the database
             _context.Video.Add(video);
@@ -152,6 +172,32 @@ namespace ScribrAPI.Controllers
             await _context.SaveChangesAsync();
 
             return video;
+        }
+
+        // GET api/Videos/SearchByTranscriptions/HelloWorld
+        [HttpGet("SearchByTranscriptions/{searchString}")]
+        public async Task<ActionResult<IEnumerable<Video>>> Search(string searchString)
+        {
+            if (String.IsNullOrEmpty(searchString))
+            {
+                return BadRequest("Search string cannot be null or empty.");
+            }
+
+            // Choose transcriptions that has the phrase 
+            var videos = await _context.Video.Include(video => video.Transcription).Select(video => new Video {
+                VideoId = video.VideoId,
+                VideoTitle = video.VideoTitle,
+                VideoLength = video.VideoLength,
+                WebUrl = video.WebUrl,
+                ThumbnailUrl = video.ThumbnailUrl,
+                IsFavourite = video.IsFavourite,
+                Transcription = video.Transcription.Where(tran => tran.Phrase.Contains(searchString)).ToList()
+            }).ToListAsync();
+
+            // Removes all videos with empty transcription
+            videos.RemoveAll(video => video.Transcription.Count == 0);
+            return Ok(videos);
+
         }
 
         private bool VideoExists(int id)
