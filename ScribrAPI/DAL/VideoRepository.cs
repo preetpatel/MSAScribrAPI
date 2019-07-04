@@ -46,7 +46,6 @@ namespace ScribrAPI.DAL
         {
             context.SaveChanges();
         }
-
         private bool disposed = false;
 
         protected virtual void Dispose(bool disposing)
