@@ -240,7 +240,7 @@ Your launchSettings.json may look **similar** to this.
 
 Swagger UI enables you to interact with your API directly. 
 
-Now, you should see the following when you run the application.
+Now, you should see the following when you run the application. Swagger UI renders all the basic methods needed to interact with your data model making it easy to test your API. 
 
 ![Scribr API with Swagger UI Preview](images/1.png )
 
