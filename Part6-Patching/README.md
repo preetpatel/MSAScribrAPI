@@ -12,7 +12,14 @@
 
 See more examples [here](https://dotnetcoretutorials.com/2017/11/29/json-patch-asp-net-core/) for your understanding!
 
-## 1.Data Access Layer (DAL)
+## 1. Setup
+
+From the `Package Manager Console`, run the following commands to install the AutoMapper and the official JSON Patch library:
+
+`Install-Package AutoMapper.Extensions.Microsoft.DependencyInjection`   
+`Install-Package Microsoft.AspNetCore.JsonPatch`
+
+## 2.Data Access Layer (DAL)
 
 ***The Repository***    
 The repository is intended to create an abstraction layer between the data access layer (DAL) and the business logic layer of an application. Implementing these patterns can help insulate your application from changes in the data store and can facilitate automated unit testing or test-driven development (TDD). (source: [Microsoft](https://docs.microsoft.com/en-us/aspnet/mvc/overview/older-versions/getting-started-with-ef-5-using-mvc-4/implementing-the-repository-and-unit-of-work-patterns-in-an-asp-net-mvc-application?fbclid=IwAR0339QgLfYu2DuxWmkjsI0y1oxcyaDdZknQvQtP11SMbu_XZjOU5IXNcVI))
@@ -27,7 +34,7 @@ There are different ways to implement the repository. The approach to implementi
 
 ### Creating The Video Repository Class
 
-In the DAL folder, create a class file named `IVideoRepository.cs` with the following code:
+Now we will create a folder called DAL and in the DAL folder, create a class file named `IVideoRepository.cs` with the following code:
 
 ```csharp
 using System;
@@ -139,7 +146,7 @@ public VideoRepository(scriberContext context)
 ```
 ### Change the Videos Controller to Use the Repository
 
-In VideosController.cs, add the following code - the Video Repository - as a IVideoRepository instance and call it in the constructor `VideosController(scriberContext context, IMapper mapper)`.
+In VideosController.cs, add the following code - the Video Repository - as a IVideoRepository instance and call it in the constructor `VideosController(scriberContext context)`.
 
 ```csharp
 using Microsoft.AspNetCore.Mvc;
@@ -151,8 +158,9 @@ public class VideosController : ControllerBase
     {
         private IVideoRepository videoRepository;
 
-        public VideosController(scriberContext context, IMapper mapper)
+        public VideosController(scriberContext context)
             {
+                _context = context;
                 this.videoRepository = new VideoRepository(new scriberContext());
             }
 ```
@@ -193,24 +201,6 @@ Inside `Video.cs` file, we will create a new VideoDTO class with the following c
 
 As a result, the `VideoDTO` class includes all of the properties from the Video model as above.
 
-#### Setup AutoMapper
-
-From the `Package Manager Console`, we will install the following Nuget package :
-
-`Install-Package AutoMapper.Extensions.Microsoft.DependencyInjection`
-
-This will also in turn install the Automapper NuGet package if you don’t have it already.
-
-Inside your ConfigureServices method of your `startup.cs`, add a call to add the AutoMapper required services like so :
-
-```csharp
-public void ConfigureServices(IServiceCollection services)
-        {
-            services.AddDbContext<scriberContext>();
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
-            services.AddAutoMapper(typeof(Startup));
-//some existing code lines
-```
 #### Adding AutoMapper Profile
 
 Inside the Model folder, create a file named `MapperProfile.cs` with the following code. We will create two mappings, one from Video to VideoDTO , and the other one map VideoDTO to Video.
@@ -236,16 +226,11 @@ When your application runs, Automapper will go through your code looking for cla
 
 Now we get to the main part that will create a PATCH request to handle partially updating a single property of Video.
 
-From the Package Manager console, run the following command to install the official JSON Patch library:
-
-`Install-Package Microsoft.AspNetCore.JsonPatch`
-
-Inside the `VideoController.cs` file, add the mapper instance and PATCH methods as below:
+Inside the `VideoController.cs` file, firstly we will add the mapper inside the constructor of VideosController as following:
 
 ```csharp
         private IVideoRepository videoRepository;
         private readonly IMapper _mapper;
-        private readonly scriberContext _context;
 
         public VideosController(scriberContext context, IMapper mapper)
         {
@@ -253,9 +238,12 @@ Inside the `VideoController.cs` file, add the mapper instance and PATCH methods 
             _mapper = mapper;
             this.videoRepository = new VideoRepository(new scriberContext());
         }
+```
 
-//...some other coding lines
+ The we will continue to code our `PATCH` method:
 
+
+```csharp
 //PUT with PATCH to handle isFavourite
         [HttpPatch("update/{id}")]
         public VideoDTO Patch(int id, [FromBody]JsonPatchDocument<VideoDTO> videoPatch)
@@ -275,12 +263,15 @@ Inside the `VideoController.cs` file, add the mapper instance and PATCH methods 
         }
 ```
 
-Then in the `Startup.cs`, we will add the mapper as below:
+#### Setup AutoMapper
+
+Inside your ConfigureServices method of your `startup.cs`, add the following call as the AutoMapper required services as below:
+
+`services.AddAutoMapper(typeof(Startup));`
+
 
 ```csharp
 using AutoMapper;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Mvc;
 
 // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
@@ -289,16 +280,16 @@ using Microsoft.AspNetCore.Mvc;
             services.AddDbContext<scriberContext>();
             services.AddAutoMapper(typeof(Startup));
 
-...//code continue
+//code continue
 ```
 
 ## 3. Testing PATCH Request
 Now go ahead and launch your project with IIS Express in the tool bar.
-![IISExpress](./img/IISExpress.PNG)
+![IISExpress](./img/IISExpress.png)
 
 Once it launches the project successfully, you will see the PATCH method under Videos section.
 
-![patchmenu](./img/patchmenu.PNG)
+![patchmenu](./img/patchmenu.png)
 
 Go ahead and click on it to test it out.
 
@@ -312,15 +303,15 @@ As you can see in the Example Value, besides the Video ID, it will ask us four p
 
 Now I will call a get request to see the list of videos that are in the database. Let say we want to change the IsFavourite value of the video with ID 32.
 
-![get](./img/get.PNG)
+![get](./img/get.png)
 
 We will input into id, "value", "path", and "op" with 32, true, "/IsFavourite", "replace" respectively and hit Execute!
 
-![inputvalue](./img/inputvalue.PNG)
+![inputvalue](./img/inputvalue.png)
 
 It will respond back with Code 200 and a Response Body that stated the Video with ID 32 has "IsFavourite" true.
 
-![success](./img/success.PNG)
+![success](./img/success.png)
 
 Congratulation! Now we can update part of Video without having to send all attributes of Video entities. You can try to modify other attributes as well to see if our PATCH method is working well.
 
