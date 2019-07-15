@@ -312,7 +312,7 @@ As you can see in the Example Value, besides the Video ID, it will ask us four p
 
 Now I will call a get request to see the list of videos that are in the database. Let say we want to change the IsFavourite value of the video with ID 32.
 
-![get](./img/get.png)
+![get](./img/get.PNG)
 
 We will input into id, "value", "path", and "op" with 32, true, "/IsFavourite", "replace" respectively and hit Execute!
 
