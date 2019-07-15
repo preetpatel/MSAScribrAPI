@@ -294,7 +294,7 @@ using Microsoft.AspNetCore.Mvc;
 
 ## 3. Testing PATCH Request
 Now go ahead and launch your project with IIS Express in the tool bar.
-![IISExpress](./img/IISExpress.png)
+![IISExpress](./img/IISExpress.PNG)
 
 Once it launches the project successfully, you will see the PATCH method under Videos section.
 
