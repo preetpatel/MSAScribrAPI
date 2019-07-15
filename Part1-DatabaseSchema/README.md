@@ -29,7 +29,7 @@ Next will be storing Transcriptions with the following information:
 
 Since one video can have many transcriptions but one transcription belongs to only one video. Therefore we will have a one-to-many relationship here between two tables: Video and Transcription. Let's look at the following ERD:
 
-![DatabaseSchema](./img/DatabaseSchema.PNG)
+![DatabaseSchema](./img/DatabaseSchema.png)
 
 # 3. Creating Database on Azure
 
