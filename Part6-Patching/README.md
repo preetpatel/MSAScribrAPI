@@ -298,11 +298,11 @@ Now go ahead and launch your project with IIS Express in the tool bar.
 
 Once it launches the project successfully, you will see the PATCH method under Videos section.
 
-![patchmenu](./img/patchmenu.png)
+![patchmenu](./img/patchmenu.PNG)
 
 Go ahead and click on it to test it out.
 
-![tryitout](./img/tryitout.png)
+![tryitout](./img/tryitout.PNG)
 
 As you can see in the Example Value, besides the Video ID, it will ask us four parameters to complete the request. Here we only focus on three of them: "value", "path", and "op". As introduced above:
 
@@ -312,11 +312,11 @@ As you can see in the Example Value, besides the Video ID, it will ask us four p
 
 Now I will call a get request to see the list of videos that are in the database. Let say we want to change the IsFavourite value of the video with ID 32.
 
-![get](./img/get.png)
+![get](./img/get.PNG)
 
 We will input into id, "value", "path", and "op" with 32, true, "/IsFavourite", "replace" respectively and hit Execute!
 
-![inputvalue](./img/inputvalue.png)
+![inputvalue](./img/inputvalue.PNG)
 
 It will respond back with Code 200 and a Response Body that stated the Video with ID 32 has "IsFavourite" true.
 
