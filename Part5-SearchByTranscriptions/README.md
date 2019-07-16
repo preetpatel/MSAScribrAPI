@@ -18,6 +18,7 @@ The self-referencing loop issue, caused by the two tables relationship, since wh
 We need to add this particular option to ``ConfigureServices()`` method in ``Startup.cs``:
 
 ```C#
+services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2).AddJsonOptions(
 options => options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore);
 ```
 Now that this issue is resolved, go ahead and test this **GET** method in swagger UI.
