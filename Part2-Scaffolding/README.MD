@@ -38,9 +38,9 @@ Repeat this process for adding a Transcription Controller.
 
 Now we are ready to test this API, start the API application with IIS Express from the tool bar on the top. Change the endpoint from `/api/values` to `/api/Videos` in the browser. If everything goes well, you will see `[]`, this is not very exciting right now as there is no content stored in the database, but if you are able to see this, believe it or not, you've just created a fully functional API.
 
-# Moving the connectionStrings to appSettings.json
+# Moving the connectionStrings to appSettings.json [Optional]
 
-If you inspect under ``Model -> scriberContext.cs`` you will find our connectionString there. This is not ideal so it is hard-coded into our source code. We at least move this to ``appsettings.json``.
+If you inspect under ``Model -> scriberContext.cs`` you will find our connectionString there. This is not ideal as it is hard-coded into our source code. We at least move this to ``appsettings.json``.
 
 ```C#
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

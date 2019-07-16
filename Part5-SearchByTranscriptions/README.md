@@ -2,8 +2,7 @@
 
 Let's finally implement another really exciting GET method. The SearchByTranscriptions! This will finally gives us the ability to search using keywords and return a list of **all** the videos containing those words!
 
-Let's declare a basic GET method that will retrieve all the video and its phrases. Here, we use LINQ ``.Include()`` on **video.transcription** to utilize relationship between the video and transcription table. Go ahead and test this get method in swagger UI.
-
+Let's declare a basic GET method that will retrieve all the video and its phrases. Here, we use LINQ ``.Include()`` on **video.transcription** to utilize relationship between the video and transcription table. But this has an issue!
 ```C#
         // GET api/Videos/SearchByTranscriptions/HelloWorld
         [HttpGet("SearchByTranscriptions/{searchString}")]
@@ -13,6 +12,14 @@ Let's declare a basic GET method that will retrieve all the video and its phrase
             return Ok(videos);
         }
 ```
+
+We need to add this particular option to ``ConfigureServices()`` method in ``Startup.cs``:
+
+```C#
+options => options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore);
+```
+
+This helps prevent the self-referencing loop issue, caused by the two tables relationship, since when used ``include()``, each video now contains all its related transcription, however each transcription object also contains its video! Now that this issue is resolved, go ahead and test this **GET** method in swagger UI.
 
 We can see that this essentially gives us back the list of video with each one containing its set of transriptions, but not quite filter to include only the transcription we want. 
 
