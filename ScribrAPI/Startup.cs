@@ -14,6 +14,7 @@ using Microsoft.Extensions.Options;
 using ScribrAPI.Model;
 using Swashbuckle.AspNetCore.Swagger;
 using Microsoft.EntityFrameworkCore;
+using ScribrAPI.CentralHub;
 
 namespace ScribrAPI
 {
@@ -52,6 +53,9 @@ namespace ScribrAPI
                     },
                 });
             });
+
+            //Registering Azure SignalR service
+            services.AddSignalR().AddAzureSignalR("Endpoint=https://scribrapi.service.signalr.net;AccessKey=dTdGyqkeC0l6AkbdH8nvfNNyIA4xze4EdUTwbNB/Cfo=;Version=1.0;");
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -80,6 +84,13 @@ namespace ScribrAPI
 
             app.UseHttpsRedirection();
             app.UseMvc();
+
+            // SignalR
+            app.UseFileServer();
+            app.UseAzureSignalR(routes =>
+            {
+                routes.MapHub<PushNotification>("/chat");
+            });
         }
     }
 }
