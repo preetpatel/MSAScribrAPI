@@ -54,8 +54,16 @@ namespace ScribrAPI
                 });
             });
 
+            services.AddCors(options => options.AddPolicy("CorsPolicy",
+            builder =>
+            {
+                builder.AllowAnyMethod().AllowAnyHeader()
+                       .WithOrigins("https://scribr.azurewebsites.net/")
+                       .AllowCredentials();
+            }));
+
             //Registering Azure SignalR service
-            services.AddSignalR().AddAzureSignalR("Endpoint=https://scribrapi.service.signalr.net;AccessKey=dTdGyqkeC0l6AkbdH8nvfNNyIA4xze4EdUTwbNB/Cfo=;Version=1.0;");
+            services.AddSignalR();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -86,8 +94,9 @@ namespace ScribrAPI
             app.UseMvc();
 
             // SignalR
+            app.UseCors("CorsPolicy");
             app.UseFileServer();
-            app.UseAzureSignalR(routes =>
+            app.UseSignalR(routes =>
             {
                 routes.MapHub<PushNotification>("/chat");
             });
