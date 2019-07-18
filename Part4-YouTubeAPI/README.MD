@@ -309,10 +309,12 @@ else
 We are almost done, we now need to address escape character and HTML characters, since this is a different responsibility, let's put this into a different private function called `CleanLink()` and let our `GetTranscriptionLink()` to call this method.
 
 Here is what characters mean:
-|String|Character|
-|----------|---------|
-|\\\\u0026 |"&"|
-|\\\\      |"" (Nothing)|
+
+
+| String   |      Character      |
+|----------|--------------|
+| \\\\u0026|  "&" |
+| \\\\       |  "" (Nothing)   |
 
 
 Here is the code for replacing the String with the corresponding characters, this is self-explanatory.
