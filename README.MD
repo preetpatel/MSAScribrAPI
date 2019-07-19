@@ -68,7 +68,33 @@ And that's pretty much it. If you've configured everything properly, you will se
 
 Once the build and release stages are complete, click on the link for your web app and hopefully your app shows up. Congratulations! At this stage, you've completed the steps to automate the build and release of your project every time you commit a change to github. No need to re-upload and re-compile... Isn't that cool!
 
-(MARC TO ADD UNIT TESTING BIT)
+## Testing
+
+Hi guys! Marc here just for this one section. Azure DevOps is about to get even more magical! All you need to do to setup automated testing before deployment is to put your test project in the same github repo as the the rest of the project, like so:
+
+![](https://i.imgur.com/Mmo2zaM.png)
+
+However, it turns out that I (somewhat embarrasingly) went against the usual convension for the name of test projects in the .NET realm, so we need to change the regex pattern that Azure DevOps uses to look for test projects.
+
+Go to the overview of your DevOps project and click Pipelines -> Builds
+![](https://i.imgur.com/HswShUc.png)
+
+Above the build list, click edit to edit the pipeline
+![](https://i.imgur.com/DSduSfg.png)
+
+As you can see here, the pipeline is set to look for the pattern ```**/*UnitTests/*.csproj```
+![](https://i.imgur.com/EMTcfWs.png)
+
+We need this to match the Unit Test project, so change it to ``**/UnitTesting*/*.csproj``` Once you've done that, click Save & Queue. There will be another popup asking you to confirm the save.
+![](https://i.imgur.com/1PKml8W.png)
+
+You will be automatically taken to the summary of the build you just queued. Click on the Test job
+![](https://i.imgur.com/3RfICPQ.png)
+
+As you can see, the tests ran and were successful. Hurrah!
+![](https://i.imgur.com/Pgzl1AH.png)
+
+If any tests fail, the build will fail and will not be deployed - this is perfect because it automatically stops you from putting buggy code out into production. :)
 
 # Front End on DevOps
 Alright. Now that we've gotten aquainted with setting up a CI/CD pipeline for our API, the general steps to add the frontend to our DevOps cycle should be the same, aside from a few differences. 
