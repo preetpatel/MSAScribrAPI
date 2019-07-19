@@ -42,3 +42,24 @@ Now you want to select the *Code Repository* as GitHub and go through the proces
 Cool! Once you've done that, press next and you will get to the page that asks you to configure your framework. Since the API was coded in a .NET environment, we will choose the runtime as *.NET* and the application framework as *ASP.NET Core*
 Warning! By default, the framework is selected as ASP.NET. Please be sure to choose ASP.NET Core
 ![](https://i.imgur.com/PSWp0oO.png)
+
+Press next, and choose the Azure service as Windows Web App. This is becaue our project is an ASP.NET app and it does not make sense to run it on Linux as Windows is supported by default.
+![](https://i.imgur.com/sZhPK9m.png)
+
+Press next, and we're almost set up! We want to give our new devops project a name and organisation. If you dont have an organisation, create a new one.
+Now under Pricing tier, press "Additional Settings" and select the F1 Free tier as shown in the illustration below.
+![](https://i.imgur.com/XRsGHJX.png)
+
+Perfect! Press next and wait for the deployment to be completed. This may take a while so stretch for a bit.
+Once you're done, you'll see the page below and you want to select "Go to resource"
+![](https://i.imgur.com/W40AKwS.png)
+
+And that's pretty much it. If you've configured everything properly, you will see the follwing stages shown below where your code is compiled in the "Build" stage and then sent to dev to be released onto your web app. You can track the status of each of the tasks by clicking on the "in progress" links.
+![](https://i.imgur.com/M4TZnPp.png)
+![](https://i.imgur.com/TXOSRhx.png)
+
+Once the build and release stages are complete, click on the link for your web app and hopefully your app shows up. Congratulations! At this stage, you've completed the steps to automate the build and release of your project every time you commit a change to github. No need to re-upload and re-compile... Isn't that cool!
+
+(MARC TO ADD UNIT TESTING BIT)
+
+# Front End on DevOps
