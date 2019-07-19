@@ -1,4 +1,4 @@
-# Phase 2 API DevOps
+# Phase 2 API and Frontend on DevOps
 
 For this module we will be placing our existing <i>Scribr</i> React Application and API into continuous development pipelines. This allows us to have various benefits:
 * You don't need to upload code to Azure every time you make a commit
