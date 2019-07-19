@@ -85,7 +85,7 @@ Above the build list, click edit to edit the pipeline
 As you can see here, the pipeline is set to look for the pattern ```**/*UnitTests/*.csproj```
 ![](https://i.imgur.com/EMTcfWs.png)
 
-We need this to match the Unit Test project, so change it to ```**/UnitTesting*/*.csproj``` Once you've done that, click Save & Queue. There will be another popup asking you to confirm the save.
+We need this to match the Unit Test project, so change it to ```**/UnitTest*/*.csproj``` Once you've done that, click Save & Queue. There will be another popup asking you to confirm the save.
 ![](https://i.imgur.com/1PKml8W.png)
 
 You will be automatically taken to the summary of the build you just queued. Click on the Test job
